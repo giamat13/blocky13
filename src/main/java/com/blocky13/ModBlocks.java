@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -12,6 +14,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ButtonBlock;
@@ -25,17 +28,22 @@ import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockSetType;
 import net.minecraft.world.level.block.state.properties.WoodType;
 
 public class ModBlocks {
-    /** Blocks in the order they should appear in the creative tab. */
-    private static final List<Block> CREATIVE_ORDER = new ArrayList<>();
+    /** Every mod block, in registration order -> Building Blocks tab. */
+    private static final List<Block> BUILDING_ORDER = new ArrayList<>();
+    /** Blocks made of redstone -> also shown in the Redstone Blocks tab. */
+    private static final List<Block> REDSTONE_ORDER = new ArrayList<>();
+    /** Blocks that must render on the cutout layer (transparent gaps). Read by the client initializer. */
+    public static final List<Block> CUTOUT_BLOCKS = new ArrayList<>();
 
-    /**
-     * Base blocks the mod adds slabs AND stairs for.
-     * The slab/stairs id is "<base>_slab" / "<base>_stairs" and properties are copied from the vanilla block.
-     */
+    /** The base whose variants act as redstone power sources and appear in the Redstone tab. */
+    private static final String REDSTONE_BASE = "redstone_block";
+
+    /** Base blocks (id prefix -> vanilla block to copy properties from). */
     private static final Object[][] BASES = {
             {"dirt",            Blocks.DIRT},
             {"iron_block",      Blocks.IRON_BLOCK},
@@ -60,63 +68,80 @@ public class ModBlocks {
         for (Object[] entry : BASES) {
             String base = (String) entry[0];
             Block copyFrom = (Block) entry[1];
-            registerSlab(base + "_slab", copyFrom);
-            registerStairs(base + "_stairs", copyFrom);
-            registerFence(base + "_fence", copyFrom);
-            registerFenceGate(base + "_fence_gate", copyFrom);
-            registerDoor(base + "_door", copyFrom);
-            registerTrapdoor(base + "_trapdoor", copyFrom);
-            registerPressurePlate(base + "_pressure_plate", copyFrom);
-            registerButton(base + "_button", copyFrom);
-            registerChain(base + "_chain", copyFrom);
-            registerBars(base + "_bars", copyFrom);
+            boolean rs = base.equals(REDSTONE_BASE);
+            registerSlab(base + "_slab", copyFrom, rs);
+            registerStairs(base + "_stairs", copyFrom, rs);
+            registerFence(base + "_fence", copyFrom, rs);
+            registerFenceGate(base + "_fence_gate", copyFrom, rs);
+            registerDoor(base + "_door", copyFrom, rs);
+            registerTrapdoor(base + "_trapdoor", copyFrom, rs);
+            registerPressurePlate(base + "_pressure_plate", copyFrom, rs);
+            registerButton(base + "_button", copyFrom, rs);
+            registerChain(base + "_chain", copyFrom, rs);
+            registerBars(base + "_bars", copyFrom, rs);
         }
 
+        // All blocks live in Building Blocks; redstone-material variants also appear in Redstone Blocks.
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.BUILDING_BLOCKS).register(entries -> {
-            for (Block block : CREATIVE_ORDER) {
+            for (Block block : BUILDING_ORDER) {
+                entries.accept(block);
+            }
+        });
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.REDSTONE_BLOCKS).register(entries -> {
+            for (Block block : REDSTONE_ORDER) {
                 entries.accept(block);
             }
         });
     }
 
-    private static void registerSlab(String name, Block copyFrom) {
-        register(name, new SlabBlock(props(name, copyFrom)));
+    private static void registerSlab(String name, Block copyFrom, boolean rs) {
+        register(name, rs ? new PoweredSlab(props(name, copyFrom)) : new SlabBlock(props(name, copyFrom)), rs);
     }
 
-    private static void registerStairs(String name, Block copyFrom) {
-        register(name, new StairBlock(copyFrom.defaultBlockState(), props(name, copyFrom)));
+    private static void registerStairs(String name, Block copyFrom, boolean rs) {
+        BlockState base = copyFrom.defaultBlockState();
+        register(name, rs ? new PoweredStairs(base, props(name, copyFrom)) : new StairBlock(base, props(name, copyFrom)), rs);
     }
 
-    private static void registerFence(String name, Block copyFrom) {
-        register(name, new FenceBlock(props(name, copyFrom).noOcclusion()));
+    private static void registerFence(String name, Block copyFrom, boolean rs) {
+        BlockBehaviour.Properties p = props(name, copyFrom).noOcclusion();
+        register(name, rs ? new PoweredFence(p) : new FenceBlock(p), rs);
     }
 
-    private static void registerFenceGate(String name, Block copyFrom) {
-        register(name, new FenceGateBlock(WoodType.OAK, props(name, copyFrom).noOcclusion()));
+    private static void registerFenceGate(String name, Block copyFrom, boolean rs) {
+        BlockBehaviour.Properties p = props(name, copyFrom).noOcclusion();
+        register(name, rs ? new PoweredFenceGate(WoodType.OAK, p) : new FenceGateBlock(WoodType.OAK, p), rs);
     }
 
-    private static void registerDoor(String name, Block copyFrom) {
-        register(name, new DoorBlock(BlockSetType.IRON, props(name, copyFrom).noOcclusion()));
+    private static void registerDoor(String name, Block copyFrom, boolean rs) {
+        BlockBehaviour.Properties p = props(name, copyFrom).noOcclusion();
+        register(name, rs ? new PoweredDoor(BlockSetType.OAK, p) : new DoorBlock(BlockSetType.OAK, p), rs);
     }
 
-    private static void registerTrapdoor(String name, Block copyFrom) {
-        register(name, new TrapDoorBlock(BlockSetType.IRON, props(name, copyFrom).noOcclusion()));
+    private static void registerTrapdoor(String name, Block copyFrom, boolean rs) {
+        BlockBehaviour.Properties p = props(name, copyFrom).noOcclusion();
+        register(name, rs ? new PoweredTrapdoor(BlockSetType.OAK, p) : new TrapDoorBlock(BlockSetType.OAK, p), rs);
     }
 
-    private static void registerPressurePlate(String name, Block copyFrom) {
-        register(name, new PressurePlateBlock(BlockSetType.IRON, props(name, copyFrom).noOcclusion()));
+    // Pressure plates and buttons are already redstone components (emit power when activated); no powered override.
+    private static void registerPressurePlate(String name, Block copyFrom, boolean rs) {
+        register(name, new PressurePlateBlock(BlockSetType.IRON, props(name, copyFrom).noOcclusion()), rs);
     }
 
-    private static void registerButton(String name, Block copyFrom) {
-        register(name, new ButtonBlock(BlockSetType.IRON, 20, props(name, copyFrom).noOcclusion()));
+    private static void registerButton(String name, Block copyFrom, boolean rs) {
+        register(name, new ButtonBlock(BlockSetType.IRON, 20, props(name, copyFrom).noOcclusion()), rs);
     }
 
-    private static void registerChain(String name, Block copyFrom) {
-        register(name, new ChainBlock(props(name, copyFrom).noOcclusion()));
+    private static void registerChain(String name, Block copyFrom, boolean rs) {
+        BlockBehaviour.Properties p = props(name, copyFrom).noOcclusion();
+        Block b = register(name, rs ? new PoweredChain(p) : new ChainBlock(p), rs);
+        CUTOUT_BLOCKS.add(b);
     }
 
-    private static void registerBars(String name, Block copyFrom) {
-        register(name, new IronBarsBlock(props(name, copyFrom).noOcclusion()));
+    private static void registerBars(String name, Block copyFrom, boolean rs) {
+        BlockBehaviour.Properties p = props(name, copyFrom).noOcclusion();
+        Block b = register(name, rs ? new PoweredBars(p) : new IronBarsBlock(p), rs);
+        CUTOUT_BLOCKS.add(b);
     }
 
     private static BlockBehaviour.Properties props(String name, Block copyFrom) {
@@ -124,10 +149,13 @@ public class ModBlocks {
                 .setId(ResourceKey.create(Registries.BLOCK, id(name)));
     }
 
-    private static <T extends Block> T register(String name, T block) {
+    private static <T extends Block> T register(String name, T block, boolean redstoneGroup) {
         registerBlockItem(name, block);
         Registry.register(BuiltInRegistries.BLOCK, id(name), block);
-        CREATIVE_ORDER.add(block);
+        BUILDING_ORDER.add(block);
+        if (redstoneGroup) {
+            REDSTONE_ORDER.add(block);
+        }
         return block;
     }
 
@@ -138,5 +166,55 @@ public class ModBlocks {
 
     private static Identifier id(String name) {
         return Identifier.fromNamespaceAndPath(Blocky13.MOD_ID, name);
+    }
+
+    // ---- Redstone-powered variants: constant signal source of strength 15, like a block of redstone. ----
+
+    private static class PoweredSlab extends SlabBlock {
+        PoweredSlab(Properties p) { super(p); }
+        @Override protected boolean isSignalSource(BlockState s) { return true; }
+        @Override protected int getSignal(BlockState s, BlockGetter l, BlockPos pos, Direction d) { return 15; }
+    }
+
+    private static class PoweredStairs extends StairBlock {
+        PoweredStairs(BlockState base, Properties p) { super(base, p); }
+        @Override protected boolean isSignalSource(BlockState s) { return true; }
+        @Override protected int getSignal(BlockState s, BlockGetter l, BlockPos pos, Direction d) { return 15; }
+    }
+
+    private static class PoweredFence extends FenceBlock {
+        PoweredFence(Properties p) { super(p); }
+        @Override protected boolean isSignalSource(BlockState s) { return true; }
+        @Override protected int getSignal(BlockState s, BlockGetter l, BlockPos pos, Direction d) { return 15; }
+    }
+
+    private static class PoweredFenceGate extends FenceGateBlock {
+        PoweredFenceGate(WoodType w, Properties p) { super(w, p); }
+        @Override protected boolean isSignalSource(BlockState s) { return true; }
+        @Override protected int getSignal(BlockState s, BlockGetter l, BlockPos pos, Direction d) { return 15; }
+    }
+
+    private static class PoweredDoor extends DoorBlock {
+        PoweredDoor(BlockSetType t, Properties p) { super(t, p); }
+        @Override protected boolean isSignalSource(BlockState s) { return true; }
+        @Override protected int getSignal(BlockState s, BlockGetter l, BlockPos pos, Direction d) { return 15; }
+    }
+
+    private static class PoweredTrapdoor extends TrapDoorBlock {
+        PoweredTrapdoor(BlockSetType t, Properties p) { super(t, p); }
+        @Override protected boolean isSignalSource(BlockState s) { return true; }
+        @Override protected int getSignal(BlockState s, BlockGetter l, BlockPos pos, Direction d) { return 15; }
+    }
+
+    private static class PoweredChain extends ChainBlock {
+        PoweredChain(Properties p) { super(p); }
+        @Override protected boolean isSignalSource(BlockState s) { return true; }
+        @Override protected int getSignal(BlockState s, BlockGetter l, BlockPos pos, Direction d) { return 15; }
+    }
+
+    private static class PoweredBars extends IronBarsBlock {
+        PoweredBars(Properties p) { super(p); }
+        @Override protected boolean isSignalSource(BlockState s) { return true; }
+        @Override protected int getSignal(BlockState s, BlockGetter l, BlockPos pos, Direction d) { return 15; }
     }
 }

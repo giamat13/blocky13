@@ -1,0 +1,20 @@
+{
+  "replace": false,
+  "values": [
+    "blocky13:dirt_fence",
+    "blocky13:iron_block_fence",
+    "blocky13:coal_block_fence",
+    "blocky13:copper_block_fence",
+    "blocky13:gold_block_fence",
+    "blocky13:redstone_block_fence",
+    "blocky13:emerald_block_fence",
+    "blocky13:lapis_block_fence",
+    "blocky13:diamond_block_fence",
+    "blocky13:netherite_block_fence",
+    "blocky13:raw_iron_block_fence",
+    "blocky13:raw_copper_block_fence",
+    "blocky13:raw_gold_block_fence",
+    "blocky13:quartz_block_fence",
+    "blocky13:amethyst_block_fence"
+  ]
+}
