@@ -15,9 +15,11 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ButtonBlock;
+import net.minecraft.world.level.block.ChainBlock;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
+import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.PressurePlateBlock;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
@@ -66,6 +68,8 @@ public class ModBlocks {
             registerTrapdoor(base + "_trapdoor", copyFrom);
             registerPressurePlate(base + "_pressure_plate", copyFrom);
             registerButton(base + "_button", copyFrom);
+            registerChain(base + "_chain", copyFrom);
+            registerBars(base + "_bars", copyFrom);
         }
 
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.BUILDING_BLOCKS).register(entries -> {
@@ -105,6 +109,14 @@ public class ModBlocks {
 
     private static void registerButton(String name, Block copyFrom) {
         register(name, new ButtonBlock(BlockSetType.IRON, 20, props(name, copyFrom).noOcclusion()));
+    }
+
+    private static void registerChain(String name, Block copyFrom) {
+        register(name, new ChainBlock(props(name, copyFrom).noOcclusion()));
+    }
+
+    private static void registerBars(String name, Block copyFrom) {
+        register(name, new IronBarsBlock(props(name, copyFrom).noOcclusion()));
     }
 
     private static BlockBehaviour.Properties props(String name, Block copyFrom) {
