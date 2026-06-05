@@ -14,9 +14,17 @@ import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ButtonBlock;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.FenceBlock;
+import net.minecraft.world.level.block.FenceGateBlock;
+import net.minecraft.world.level.block.PressurePlateBlock;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.properties.BlockSetType;
+import net.minecraft.world.level.block.state.properties.WoodType;
 
 public class ModBlocks {
     /** Blocks in the order they should appear in the creative tab. */
@@ -52,6 +60,12 @@ public class ModBlocks {
             Block copyFrom = (Block) entry[1];
             registerSlab(base + "_slab", copyFrom);
             registerStairs(base + "_stairs", copyFrom);
+            registerFence(base + "_fence", copyFrom);
+            registerFenceGate(base + "_fence_gate", copyFrom);
+            registerDoor(base + "_door", copyFrom);
+            registerTrapdoor(base + "_trapdoor", copyFrom);
+            registerPressurePlate(base + "_pressure_plate", copyFrom);
+            registerButton(base + "_button", copyFrom);
         }
 
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.BUILDING_BLOCKS).register(entries -> {
@@ -67,6 +81,30 @@ public class ModBlocks {
 
     private static void registerStairs(String name, Block copyFrom) {
         register(name, new StairBlock(copyFrom.defaultBlockState(), props(name, copyFrom)));
+    }
+
+    private static void registerFence(String name, Block copyFrom) {
+        register(name, new FenceBlock(props(name, copyFrom).noOcclusion()));
+    }
+
+    private static void registerFenceGate(String name, Block copyFrom) {
+        register(name, new FenceGateBlock(WoodType.OAK, props(name, copyFrom).noOcclusion()));
+    }
+
+    private static void registerDoor(String name, Block copyFrom) {
+        register(name, new DoorBlock(BlockSetType.IRON, props(name, copyFrom).noOcclusion()));
+    }
+
+    private static void registerTrapdoor(String name, Block copyFrom) {
+        register(name, new TrapDoorBlock(BlockSetType.IRON, props(name, copyFrom).noOcclusion()));
+    }
+
+    private static void registerPressurePlate(String name, Block copyFrom) {
+        register(name, new PressurePlateBlock(BlockSetType.IRON, props(name, copyFrom).noOcclusion()));
+    }
+
+    private static void registerButton(String name, Block copyFrom) {
+        register(name, new ButtonBlock(BlockSetType.IRON, 20, props(name, copyFrom).noOcclusion()));
     }
 
     private static BlockBehaviour.Properties props(String name, Block copyFrom) {

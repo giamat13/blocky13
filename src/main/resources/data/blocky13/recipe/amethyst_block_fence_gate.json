@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "#": "minecraft:amethyst_block",
+    "/": "minecraft:stick"
+  },
+  "pattern": [
+    "/#/",
+    "/#/"
+  ],
+  "result": {
+    "count": 1,
+    "id": "blocky13:amethyst_block_fence_gate"
+  }
+}
