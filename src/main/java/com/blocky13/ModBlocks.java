@@ -1,5 +1,8 @@
 package com.blocky13;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -12,71 +15,78 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
 public class ModBlocks {
-    public static final SlabBlock DIRT_SLAB = registerBlock("dirt_slab",
-            new SlabBlock(props("dirt_slab", Blocks.DIRT)));
+    /** Blocks in the order they should appear in the creative tab. */
+    private static final List<Block> CREATIVE_ORDER = new ArrayList<>();
 
-    public static final SlabBlock IRON_BLOCK_SLAB = registerBlock("iron_block_slab",
-            new SlabBlock(props("iron_block_slab", Blocks.IRON_BLOCK)));
-
-    public static final SlabBlock COAL_BLOCK_SLAB = registerBlock("coal_block_slab",
-            new SlabBlock(props("coal_block_slab", Blocks.COAL_BLOCK)));
-
-    public static final SlabBlock COPPER_BLOCK_SLAB = registerBlock("copper_block_slab",
-            new SlabBlock(props("copper_block_slab", Blocks.COPPER_BLOCK)));
-
-    public static final SlabBlock GOLD_BLOCK_SLAB = registerBlock("gold_block_slab",
-            new SlabBlock(props("gold_block_slab", Blocks.GOLD_BLOCK)));
-
-    public static final SlabBlock REDSTONE_BLOCK_SLAB = registerBlock("redstone_block_slab",
-            new SlabBlock(props("redstone_block_slab", Blocks.REDSTONE_BLOCK)));
-
-    public static final SlabBlock EMERALD_BLOCK_SLAB = registerBlock("emerald_block_slab",
-            new SlabBlock(props("emerald_block_slab", Blocks.EMERALD_BLOCK)));
-
-    public static final SlabBlock LAPIS_BLOCK_SLAB = registerBlock("lapis_block_slab",
-            new SlabBlock(props("lapis_block_slab", Blocks.LAPIS_BLOCK)));
-
-    public static final SlabBlock DIAMOND_BLOCK_SLAB = registerBlock("diamond_block_slab",
-            new SlabBlock(props("diamond_block_slab", Blocks.DIAMOND_BLOCK)));
-
-    public static final SlabBlock NETHERITE_BLOCK_SLAB = registerBlock("netherite_block_slab",
-            new SlabBlock(props("netherite_block_slab", Blocks.NETHERITE_BLOCK)));
-
-    private static BlockBehaviour.Properties props(String name, Block copyFrom) {
-        return BlockBehaviour.Properties.ofFullCopy(copyFrom)
-                .setId(ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Blocky13.MOD_ID, name)));
-    }
-
-    private static <T extends Block> T registerBlock(String name, T block) {
-        registerBlockItem(name, block);
-        return Registry.register(BuiltInRegistries.BLOCK,
-                Identifier.fromNamespaceAndPath(Blocky13.MOD_ID, name), block);
-    }
-
-    private static void registerBlockItem(String name, Block block) {
-        Registry.register(BuiltInRegistries.ITEM,
-                Identifier.fromNamespaceAndPath(Blocky13.MOD_ID, name),
-                new BlockItem(block, new Item.Properties().setId(
-                        ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Blocky13.MOD_ID, name)))));
-    }
+    /**
+     * Base blocks the mod adds slabs AND stairs for.
+     * The slab/stairs id is "<base>_slab" / "<base>_stairs" and properties are copied from the vanilla block.
+     */
+    private static final Object[][] BASES = {
+            {"dirt",            Blocks.DIRT},
+            {"iron_block",      Blocks.IRON_BLOCK},
+            {"coal_block",      Blocks.COAL_BLOCK},
+            {"copper_block",    Blocks.COPPER_BLOCK},
+            {"gold_block",      Blocks.GOLD_BLOCK},
+            {"redstone_block",  Blocks.REDSTONE_BLOCK},
+            {"emerald_block",   Blocks.EMERALD_BLOCK},
+            {"lapis_block",     Blocks.LAPIS_BLOCK},
+            {"diamond_block",   Blocks.DIAMOND_BLOCK},
+            {"netherite_block", Blocks.NETHERITE_BLOCK},
+            {"raw_iron_block",   Blocks.RAW_IRON_BLOCK},
+            {"raw_copper_block", Blocks.RAW_COPPER_BLOCK},
+            {"raw_gold_block",   Blocks.RAW_GOLD_BLOCK},
+            {"quartz_block",    Blocks.QUARTZ_BLOCK},
+            {"amethyst_block",  Blocks.AMETHYST_BLOCK},
+    };
 
     public static void registerModBlocks() {
         Blocky13.LOGGER.info("Registering Mod Blocks for " + Blocky13.MOD_ID);
 
+        for (Object[] entry : BASES) {
+            String base = (String) entry[0];
+            Block copyFrom = (Block) entry[1];
+            registerSlab(base + "_slab", copyFrom);
+            registerStairs(base + "_stairs", copyFrom);
+        }
+
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.BUILDING_BLOCKS).register(entries -> {
-            entries.accept(DIRT_SLAB);
-            entries.accept(IRON_BLOCK_SLAB);
-            entries.accept(COAL_BLOCK_SLAB);
-            entries.accept(COPPER_BLOCK_SLAB);
-            entries.accept(GOLD_BLOCK_SLAB);
-            entries.accept(REDSTONE_BLOCK_SLAB);
-            entries.accept(EMERALD_BLOCK_SLAB);
-            entries.accept(LAPIS_BLOCK_SLAB);
-            entries.accept(DIAMOND_BLOCK_SLAB);
-            entries.accept(NETHERITE_BLOCK_SLAB);
+            for (Block block : CREATIVE_ORDER) {
+                entries.accept(block);
+            }
         });
+    }
+
+    private static void registerSlab(String name, Block copyFrom) {
+        register(name, new SlabBlock(props(name, copyFrom)));
+    }
+
+    private static void registerStairs(String name, Block copyFrom) {
+        register(name, new StairBlock(copyFrom.defaultBlockState(), props(name, copyFrom)));
+    }
+
+    private static BlockBehaviour.Properties props(String name, Block copyFrom) {
+        return BlockBehaviour.Properties.ofFullCopy(copyFrom)
+                .setId(ResourceKey.create(Registries.BLOCK, id(name)));
+    }
+
+    private static <T extends Block> T register(String name, T block) {
+        registerBlockItem(name, block);
+        Registry.register(BuiltInRegistries.BLOCK, id(name), block);
+        CREATIVE_ORDER.add(block);
+        return block;
+    }
+
+    private static void registerBlockItem(String name, Block block) {
+        Registry.register(BuiltInRegistries.ITEM, id(name),
+                new BlockItem(block, new Item.Properties().setId(ResourceKey.create(Registries.ITEM, id(name)))));
+    }
+
+    private static Identifier id(String name) {
+        return Identifier.fromNamespaceAndPath(Blocky13.MOD_ID, name);
     }
 }
