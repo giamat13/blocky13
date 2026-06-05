@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "type=bottom": { "model": "blocky13:block/dirt_slab" },
+    "type=top":    { "model": "blocky13:block/dirt_slab_top" },
+    "type=double": { "model": "blocky13:block/dirt_slab_double" }
+  }
+}

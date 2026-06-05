@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "blocky13",
+	"version": "${version}",
+	"name": "blocky13",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/blocky13/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.blocky13.Blocky13"
+		],
+		"client": [
+			"com.blocky13.client.Blocky13Client"
+		]
+	},
+	"mixins": [
+		"blocky13.mixins.json",
+		{
+			"config": "blocky13.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
