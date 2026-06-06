@@ -3,7 +3,7 @@ package com.blocky13;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
@@ -37,8 +37,6 @@ public class ModBlocks {
     private static final List<Block> BUILDING_ORDER = new ArrayList<>();
     /** Blocks made of redstone -> also shown in the Redstone Blocks tab. */
     private static final List<Block> REDSTONE_ORDER = new ArrayList<>();
-    /** Blocks that must render on the cutout layer (transparent gaps). Read by the client initializer. */
-    public static final List<Block> CUTOUT_BLOCKS = new ArrayList<>();
 
     /** The base whose variants act as redstone power sources and appear in the Redstone tab. */
     private static final String REDSTONE_BASE = "redstone_block";
@@ -82,14 +80,14 @@ public class ModBlocks {
         }
 
         // All blocks live in Building Blocks; redstone-material variants also appear in Redstone Blocks.
-        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.BUILDING_BLOCKS).register(entries -> {
+        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS).register(output -> {
             for (Block block : BUILDING_ORDER) {
-                entries.accept(block);
+                output.accept(block);
             }
         });
-        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.REDSTONE_BLOCKS).register(entries -> {
+        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.REDSTONE_BLOCKS).register(output -> {
             for (Block block : REDSTONE_ORDER) {
-                entries.accept(block);
+                output.accept(block);
             }
         });
     }
@@ -134,14 +132,12 @@ public class ModBlocks {
 
     private static void registerChain(String name, Block copyFrom, boolean rs) {
         BlockBehaviour.Properties p = props(name, copyFrom).noOcclusion();
-        Block b = register(name, rs ? new PoweredChain(p) : new ChainBlock(p), rs);
-        CUTOUT_BLOCKS.add(b);
+        register(name, rs ? new PoweredChain(p) : new ChainBlock(p), rs);
     }
 
     private static void registerBars(String name, Block copyFrom, boolean rs) {
         BlockBehaviour.Properties p = props(name, copyFrom).noOcclusion();
-        Block b = register(name, rs ? new PoweredBars(p) : new IronBarsBlock(p), rs);
-        CUTOUT_BLOCKS.add(b);
+        register(name, rs ? new PoweredBars(p) : new IronBarsBlock(p), rs);
     }
 
     private static BlockBehaviour.Properties props(String name, Block copyFrom) {
