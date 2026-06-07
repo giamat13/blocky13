@@ -1,0 +1,43 @@
+# .claudecodeignore — files Claude Code should skip when reading/searching.
+# Gradle / Fabric Minecraft mod: keep context on source, not build output or caches.
+
+# ── Build output ───────────────────────────────────────────────
+build/
+out/
+bin/
+classes/
+*.jar
+*.class
+
+# ── Gradle ─────────────────────────────────────────────────────
+.gradle/
+gradle/wrapper/gradle-wrapper.jar
+
+# ── Fabric Loom cache / dev runtime (regenerated) ──────────────
+.fabric/
+run/
+remappedSrc/
+downloads/
+
+# ── IDE ────────────────────────────────────────────────────────
+.idea/
+.vscode/
+.settings/
+.classpath
+.project
+*.iml
+
+# ── Binary assets (not text) ───────────────────────────────────
+*.png
+*.ogg
+*.nbt
+
+# ── Runtime / dev artifacts ────────────────────────────────────
+options.txt
+usercache.json
+*.log
+hs_err_*.log
+*.hprof
+
+# ── OS ─────────────────────────────────────────────────────────
+*.DS_Store
