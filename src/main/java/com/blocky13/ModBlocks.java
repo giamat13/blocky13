@@ -29,10 +29,14 @@ import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.state.properties.BlockSetType;
 import net.minecraft.world.level.block.state.properties.WoodType;
 
 public class ModBlocks {
+
+    /** Colored brick base blocks in DyeColor.values() ordinal order (16 entries). */
+    public static final Block[] COLORED_BRICKS = new Block[16];
     /** Every mod block, in registration order -> Building Blocks tab. */
     private static final List<Block> BUILDING_ORDER = new ArrayList<>();
     /** Blocks made of redstone -> also shown in the Redstone Blocks tab. */
@@ -133,6 +137,7 @@ public class ModBlocks {
         }
 
         registerSandLayer();
+        registerColoredBricks();
 
         // All blocks live in Building Blocks; redstone-material variants also appear in Redstone Blocks.
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS).register(output -> {
@@ -145,6 +150,22 @@ public class ModBlocks {
                 output.accept(block);
             }
         });
+    }
+
+    private static void registerColoredBricks() {
+        DyeColor[] colors = DyeColor.values();
+        for (int i = 0; i < colors.length; i++) {
+            String name = colors[i].getName() + "_bricks";
+            Identifier id = id(name);
+            BlockBehaviour.Properties props = BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS)
+                    .setId(ResourceKey.create(Registries.BLOCK, id));
+            Block block = new Block(props);
+            registerBlockItem(name, block);
+            Registry.register(BuiltInRegistries.BLOCK, id, block);
+            BUILDING_ORDER.add(block);
+            COLORED_BRICKS[i] = block;
+        }
+        DyeBrushItem.registerFamily(COLORED_BRICKS);
     }
 
     private static void registerSandLayer() {

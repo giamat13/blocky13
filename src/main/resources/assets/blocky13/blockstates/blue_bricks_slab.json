@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "blocky13:block/blue_bricks_slab"
+    },
+    "type=top": {
+      "model": "blocky13:block/blue_bricks_slab_top"
+    },
+    "type=double": {
+      "model": "blocky13:block/blue_bricks_slab_double"
+    }
+  }
+}

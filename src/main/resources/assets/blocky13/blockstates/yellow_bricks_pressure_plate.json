@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "powered=false": {
+      "model": "blocky13:block/yellow_bricks_pressure_plate"
+    },
+    "powered=true": {
+      "model": "blocky13:block/yellow_bricks_pressure_plate_down"
+    }
+  }
+}

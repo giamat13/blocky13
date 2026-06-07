@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "bottom": "blocky13:block/magenta_bricks",
+    "top": "blocky13:block/magenta_bricks",
+    "side": "blocky13:block/magenta_bricks"
+  }
+}

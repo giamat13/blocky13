@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/door_bottom_left",
+  "textures": {
+    "top": "blocky13:block/cyan_bricks",
+    "bottom": "blocky13:block/cyan_bricks"
+  }
+}

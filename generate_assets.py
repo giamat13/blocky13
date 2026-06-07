@@ -16,6 +16,7 @@ REF_BARS_BLOCK  = os.path.join(ASSETS, "textures/block/iron_block_bars.png")
 REF_SLAB_ITEM   = os.path.join(ASSETS, "textures/item/iron_block_slab.png")
 REF_DOOR_ITEM   = os.path.join(ASSETS, "textures/item/iron_block_door.png")
 REF_CHAIN_ITEM  = os.path.join(ASSETS, "textures/item/iron_block_chain.png")
+REF_BRICKS_BLOCK = os.path.join(ASSETS, "textures/block/reference_bricks.png")
 
 # (base_id, mc_block_texture_suffix, avg_rgb, is_transparent)
 MATERIALS = [
@@ -76,6 +77,50 @@ MATERIALS = [
 
 VARIANTS = ["slab", "stairs", "fence", "fence_gate", "door", "trapdoor",
             "pressure_plate", "button", "chain", "bars"]
+
+# DyeColor ordinal order: white=0, orange=1, magenta=2, light_blue=3, yellow=4, lime=5,
+#   pink=6, gray=7, light_gray=8, cyan=9, purple=10, blue=11, brown=12, green=13, red=14, black=15
+BRICKS_MATERIALS = [
+    ("white_bricks",       (207, 213, 214)),
+    ("orange_bricks",      (224,  97,   0)),
+    ("magenta_bricks",     (169,  48, 159)),
+    ("light_blue_bricks",  ( 58, 175, 217)),
+    ("yellow_bricks",      (240, 175,  21)),
+    ("lime_bricks",        ( 94, 168,  24)),
+    ("pink_bricks",        (213, 101, 142)),
+    ("gray_bricks",        ( 54,  57,  61)),
+    ("light_gray_bricks",  (125, 125, 115)),
+    ("cyan_bricks",        ( 21, 119, 136)),
+    ("purple_bricks",      (100,  31, 156)),
+    ("blue_bricks",        ( 44,  46, 143)),
+    ("brown_bricks",       ( 96,  59,  31)),
+    ("green_bricks",       ( 73,  91,  36)),
+    ("red_bricks",         (142,  33,  33)),
+    ("black_bricks",       (  8,  10,  15)),
+]
+
+
+def create_brick_reference(path):
+    """Create a 16x16 grayscale brick pattern PNG at the given path."""
+    size = 16
+    mortar = (80, 80, 80, 255)
+    brick  = (200, 200, 200, 255)
+    img = Image.new("RGBA", (size, size))
+    pixels = []
+    for y in range(size):
+        row_offset = 4 if (y // 4) % 2 == 1 else 0
+        for x in range(size):
+            if y % 4 == 3:
+                # horizontal mortar line
+                pixels.append(mortar)
+            elif (x + row_offset) % 8 == 0:
+                # vertical mortar line (1px wide)
+                pixels.append(mortar)
+            else:
+                pixels.append(brick)
+    img.putdata(pixels)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    img.save(path)
 
 
 def write_json(path, data):
@@ -732,6 +777,140 @@ def generate_for_material(base_id, mc_tex_suffix, rgb, is_transparent):
     recolor_texture(REF_CHAIN_ITEM,  rgb, f"{tx_i}/{base_id}_chain.png", alpha)
 
 
+def generate_for_bricks(base_id, rgb):
+    tex = f"blocky13:block/{base_id}"
+    ing = f"blocky13:{base_id}"
+    # Derive color name for dye (strip "_bricks" suffix)
+    color_name = base_id[:-len("_bricks")]
+    dye_ing = f"minecraft:{color_name}_dye"
+
+    bs_dir  = os.path.join(ASSETS, "blockstates")
+    mb_dir  = os.path.join(ASSETS, "models/block")
+    mi_dir  = os.path.join(ASSETS, "models/item")
+    it_dir  = os.path.join(ASSETS, "items")
+    tx_b    = os.path.join(ASSETS, "textures/block")
+    tx_i    = os.path.join(ASSETS, "textures/item")
+    rec_dir = os.path.join(DATA,   "recipe")
+    lt_dir  = os.path.join(DATA,   "loot_table/blocks")
+    adv_dir = os.path.join(DATA,   "advancement/recipes/blocky13")
+
+    # ---- base brick block assets ----
+    write_json(f"{bs_dir}/{base_id}.json",
+               {"variants": {"": {"model": f"blocky13:block/{base_id}_block"}}})
+    write_json(f"{mb_dir}/{base_id}_block.json",
+               {"parent": "minecraft:block/cube_all", "textures": {"all": tex}})
+    write_json(f"{mi_dir}/{base_id}.json",
+               {"parent": f"blocky13:block/{base_id}_block"})
+    write_json(f"{rec_dir}/{base_id}.json",
+               {"type": "minecraft:crafting_shapeless", "category": "building",
+                "ingredients": ["minecraft:bricks", dye_ing],
+                "result": {"count": 1, "id": ing}})
+    write_json(f"{lt_dir}/{base_id}.json", loot_simple(base_id))
+    write_json(f"{adv_dir}/{base_id}.json", advancement(base_id, "", ing))
+
+    # ---- variant blockstates ----
+    write_json(f"{bs_dir}/{base_id}_slab.json",           bs_slab(base_id))
+    write_json(f"{bs_dir}/{base_id}_stairs.json",         bs_stairs(base_id))
+    write_json(f"{bs_dir}/{base_id}_fence.json",          bs_fence(base_id))
+    write_json(f"{bs_dir}/{base_id}_fence_gate.json",     bs_fence_gate(base_id))
+    write_json(f"{bs_dir}/{base_id}_door.json",           bs_door(base_id))
+    write_json(f"{bs_dir}/{base_id}_trapdoor.json",       bs_trapdoor(base_id))
+    write_json(f"{bs_dir}/{base_id}_pressure_plate.json", bs_pressure_plate(base_id))
+    write_json(f"{bs_dir}/{base_id}_button.json",         bs_button(base_id))
+    write_json(f"{bs_dir}/{base_id}_chain.json",          bs_chain(base_id))
+    write_json(f"{bs_dir}/{base_id}_bars.json",           bs_bars(base_id))
+
+    # ---- variant block models ----
+    write_json(f"{mb_dir}/{base_id}_slab.json",                  model_slab(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_slab_top.json",              model_slab_top(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_slab_double.json",           model_slab_double(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_stairs.json",                model_stairs(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_stairs_inner.json",          model_stairs_inner(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_stairs_outer.json",          model_stairs_outer(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_fence_post.json",            model_fence_post(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_fence_side.json",            model_fence_side(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_fence_inventory.json",       model_fence_inventory(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_fence_gate.json",            model_fence_gate(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_fence_gate_open.json",       model_fence_gate_open(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_fence_gate_wall.json",       model_fence_gate_wall(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_fence_gate_wall_open.json",  model_fence_gate_wall_open(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_door_bottom_left.json",      model_door_bottom_left(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_door_bottom_left_open.json", model_door_bottom_left_open(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_door_bottom_right.json",     model_door_bottom_right(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_door_bottom_right_open.json",model_door_bottom_right_open(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_door_top_left.json",         model_door_top_left(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_door_top_left_open.json",    model_door_top_left_open(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_door_top_right.json",        model_door_top_right(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_door_top_right_open.json",   model_door_top_right_open(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_trapdoor_bottom.json",       model_trapdoor_bottom(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_trapdoor_top.json",          model_trapdoor_top(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_trapdoor_open.json",         model_trapdoor_open(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_pressure_plate.json",        model_pressure_plate(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_pressure_plate_down.json",   model_pressure_plate_down(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_button.json",                model_button(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_button_pressed.json",        model_button_pressed(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_button_inventory.json",      model_button_inventory(base_id, tex))
+    write_json(f"{mb_dir}/{base_id}_chain.json",                 model_chain(base_id))
+    write_json(f"{mb_dir}/{base_id}_bars_post.json",             model_bars_post(base_id))
+    write_json(f"{mb_dir}/{base_id}_bars_post_ends.json",        model_bars_post_ends(base_id))
+    write_json(f"{mb_dir}/{base_id}_bars_side.json",             model_bars_side(base_id))
+    write_json(f"{mb_dir}/{base_id}_bars_side_alt.json",         model_bars_side_alt(base_id))
+    write_json(f"{mb_dir}/{base_id}_bars_cap.json",              model_bars_cap(base_id))
+    write_json(f"{mb_dir}/{base_id}_bars_cap_alt.json",          model_bars_cap_alt(base_id))
+
+    # ---- variant item models ----
+    write_json(f"{mi_dir}/{base_id}_slab.json",           item_slab(base_id))
+    write_json(f"{mi_dir}/{base_id}_stairs.json",         item_stairs(base_id))
+    write_json(f"{mi_dir}/{base_id}_fence.json",          item_fence(base_id))
+    write_json(f"{mi_dir}/{base_id}_fence_gate.json",     item_fence_gate(base_id))
+    write_json(f"{mi_dir}/{base_id}_door.json",           item_door(base_id))
+    write_json(f"{mi_dir}/{base_id}_trapdoor.json",       item_trapdoor(base_id))
+    write_json(f"{mi_dir}/{base_id}_pressure_plate.json", item_pressure_plate(base_id))
+    write_json(f"{mi_dir}/{base_id}_button.json",         item_button(base_id))
+    write_json(f"{mi_dir}/{base_id}_chain.json",          item_chain(base_id))
+    write_json(f"{mi_dir}/{base_id}_bars.json",           item_bars(base_id))
+
+    # ---- variant recipes ----
+    write_json(f"{rec_dir}/{base_id}_slab.json",           recipe_slab(base_id, ing))
+    write_json(f"{rec_dir}/{base_id}_stairs.json",         recipe_stairs(base_id, ing))
+    write_json(f"{rec_dir}/{base_id}_fence.json",          recipe_fence(base_id, ing))
+    write_json(f"{rec_dir}/{base_id}_fence_gate.json",     recipe_fence_gate(base_id, ing))
+    write_json(f"{rec_dir}/{base_id}_door.json",           recipe_door(base_id, ing))
+    write_json(f"{rec_dir}/{base_id}_trapdoor.json",       recipe_trapdoor(base_id, ing))
+    write_json(f"{rec_dir}/{base_id}_pressure_plate.json", recipe_pressure_plate(base_id, ing))
+    write_json(f"{rec_dir}/{base_id}_button.json",         recipe_button(base_id, ing))
+    write_json(f"{rec_dir}/{base_id}_chain.json",          recipe_chain(base_id, ing))
+    write_json(f"{rec_dir}/{base_id}_bars.json",           recipe_bars(base_id, ing))
+
+    # ---- variant loot tables ----
+    write_json(f"{lt_dir}/{base_id}_slab.json",           loot_slab(base_id))
+    for v in ["stairs", "fence", "fence_gate", "door", "trapdoor",
+              "pressure_plate", "button", "chain", "bars"]:
+        write_json(f"{lt_dir}/{base_id}_{v}.json", loot_simple(f"{base_id}_{v}"))
+
+    # ---- variant advancements ----
+    for v in VARIANTS:
+        write_json(f"{adv_dir}/{base_id}_{v}.json", advancement(base_id, v, ing))
+
+    # ---- textures (PNG) ----
+    recolor_texture(REF_BRICKS_BLOCK, rgb, f"{tx_b}/{base_id}.png")
+    recolor_texture(REF_CHAIN_BLOCK,  rgb, f"{tx_b}/{base_id}_chain.png")
+    recolor_texture(REF_BARS_BLOCK,   rgb, f"{tx_b}/{base_id}_bars.png")
+    recolor_texture(REF_SLAB_ITEM,    rgb, f"{tx_i}/{base_id}_slab.png")
+    recolor_texture(REF_DOOR_ITEM,    rgb, f"{tx_i}/{base_id}_door.png")
+    recolor_texture(REF_CHAIN_ITEM,   rgb, f"{tx_i}/{base_id}_chain.png")
+
+
+def generate_brush_assets():
+    mi_dir = os.path.join(ASSETS, "models/item")
+    it_dir = os.path.join(ASSETS, "items")
+    write_json(f"{mi_dir}/dye_brush.json",
+               {"parent": "minecraft:item/handheld",
+                "textures": {"layer0": "minecraft:item/brush"}})
+    write_json(f"{it_dir}/dye_brush.json",
+               {"model": {"type": "minecraft:model", "model": "blocky13:item/dye_brush"}})
+
+
 def generate_lang_entries():
     lang_path = os.path.join(ASSETS, "lang/en_us.json")
     with open(lang_path) as f:
@@ -754,9 +933,30 @@ def generate_lang_entries():
                 lang[block_key] = full_name
                 lang[item_key]  = full_name
 
+    for base_id, _ in BRICKS_MATERIALS:
+        base_label = title_name(base_id)
+        # Base brick block entries
+        base_block_key = f"block.blocky13.{base_id}"
+        base_item_key  = f"item.blocky13.{base_id}"
+        if base_block_key not in lang:
+            lang[base_block_key] = base_label
+            lang[base_item_key]  = base_label
+        # Variant entries
+        for v, v_label in variant_labels.items():
+            full_name = f"{base_label} {v_label}"
+            block_key = f"block.blocky13.{base_id}_{v}"
+            item_key  = f"item.blocky13.{base_id}_{v}"
+            if block_key not in lang:
+                lang[block_key] = full_name
+                lang[item_key]  = full_name
+
+    # Dye brush
+    if "item.blocky13.dye_brush" not in lang:
+        lang["item.blocky13.dye_brush"] = "Dye Brush"
+
     with open(lang_path, "w") as f:
         json.dump(lang, f, indent=2, ensure_ascii=False)
-    print(f"Updated lang file with {len(MATERIALS)} new materials")
+    print(f"Updated lang file with {len(MATERIALS)} vanilla materials and {len(BRICKS_MATERIALS)} brick sets")
 
 
 if __name__ == "__main__":
@@ -764,5 +964,11 @@ if __name__ == "__main__":
         print(f"Generating: {base_id}")
         generate_for_material(base_id, mc_tex, rgb, is_transparent)
 
+    create_brick_reference(os.path.join(ASSETS, "textures/block/reference_bricks.png"))
+    for base_id, rgb in BRICKS_MATERIALS:
+        print(f"Generating bricks: {base_id}")
+        generate_for_bricks(base_id, rgb)
+
+    generate_brush_assets()
     generate_lang_entries()
-    print(f"\nDone! Generated assets for {len(MATERIALS)} materials.")
+    print(f"\nDone! Generated assets for {len(MATERIALS)} materials and {len(BRICKS_MATERIALS)} brick sets.")
