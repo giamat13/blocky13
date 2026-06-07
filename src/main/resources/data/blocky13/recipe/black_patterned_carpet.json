@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    "minecraft:black_carpet",
+    "minecraft:black_dye"
+  ],
+  "result": {
+    "count": 1,
+    "id": "blocky13:black_patterned_carpet"
+  }
+}

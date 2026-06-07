@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    "minecraft:cyan_stained_glass"
+  ],
+  "result": {
+    "count": 1,
+    "id": "blocky13:cyan_stained_glass_button"
+  }
+}

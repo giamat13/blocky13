@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    "minecraft:cyan_carpet",
+    "minecraft:cyan_dye"
+  ],
+  "result": {
+    "count": 1,
+    "id": "blocky13:cyan_patterned_carpet"
+  }
+}

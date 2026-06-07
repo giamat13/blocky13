@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    "minecraft:black_terracotta"
+  ],
+  "result": {
+    "count": 1,
+    "id": "blocky13:black_terracotta_button"
+  }
+}

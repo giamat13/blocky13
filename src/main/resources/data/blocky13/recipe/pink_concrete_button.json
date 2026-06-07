@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    "minecraft:pink_concrete"
+  ],
+  "result": {
+    "count": 1,
+    "id": "blocky13:pink_concrete_button"
+  }
+}

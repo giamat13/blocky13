@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/door_top_right",
+  "textures": {
+    "top": "minecraft:block/light_gray_terracotta",
+    "bottom": "minecraft:block/light_gray_terracotta"
+  }
+}

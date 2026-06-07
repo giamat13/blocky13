@@ -3,7 +3,8 @@
 	"package": "com.blocky13.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"ExampleMixin"
+		"ExampleMixin",
+		"LoomMenuMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

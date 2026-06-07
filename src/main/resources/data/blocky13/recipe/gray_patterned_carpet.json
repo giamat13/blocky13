@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    "minecraft:gray_carpet",
+    "minecraft:gray_dye"
+  ],
+  "result": {
+    "count": 1,
+    "id": "blocky13:gray_patterned_carpet"
+  }
+}

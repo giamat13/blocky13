@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/template_chain",
+  "textures": {
+    "texture": "blocky13:block/cyan_stained_glass_chain",
+    "particle": "blocky13:block/cyan_stained_glass_chain"
+  }
+}
