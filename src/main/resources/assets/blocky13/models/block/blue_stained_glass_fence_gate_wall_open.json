@@ -1,4 +1,5 @@
 {
+  "render_type": "minecraft:translucent",
   "parent": "minecraft:block/template_fence_gate_wall_open",
   "textures": {
     "texture": "minecraft:block/blue_stained_glass"

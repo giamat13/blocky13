@@ -1,4 +1,5 @@
 {
+  "render_type": "minecraft:translucent",
   "parent": "minecraft:block/pressure_plate_down",
   "textures": {
     "texture": "minecraft:block/orange_stained_glass"

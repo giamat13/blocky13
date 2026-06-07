@@ -110,7 +110,7 @@ public class DyeBrushItem extends Item {
         Block newBlock = family[colorIndex];
         if (newBlock == state.getBlock()) return InteractionResult.CONSUME;
 
-        if (!level.isClientSide) {
+        if (!level.isClientSide()) {
             BlockState newState = newBlock.defaultBlockState();
             if (state.hasProperty(BlockStateProperties.WATERLOGGED)
                     && newState.hasProperty(BlockStateProperties.WATERLOGGED)) {
@@ -131,10 +131,10 @@ public class DyeBrushItem extends Item {
         double bestDist = Double.MAX_VALUE;
         DyeColor[] colors = DyeColor.values();
         for (int i = 0; i < colors.length; i++) {
-            float[] tc = colors[i].getTextureDiffuseColors();
-            double dr = r / 255.0 - tc[0];
-            double dg = g / 255.0 - tc[1];
-            double db = b / 255.0 - tc[2];
+            int tc = colors[i].getTextureDiffuseColor();
+            double dr = r / 255.0 - ((tc >> 16) & 0xFF) / 255.0;
+            double dg = g / 255.0 - ((tc >> 8) & 0xFF) / 255.0;
+            double db = b / 255.0 - (tc & 0xFF) / 255.0;
             double dist = dr * dr + dg * dg + db * db;
             if (dist < bestDist) {
                 bestDist = dist;
@@ -164,10 +164,10 @@ public class DyeBrushItem extends Item {
         }
 
         for (DyeColor dye : dyes) {
-            float[] tc = dye.getTextureDiffuseColors();
-            int dr = (int) (tc[0] * 255);
-            int dg = (int) (tc[1] * 255);
-            int db = (int) (tc[2] * 255);
+            int tc = dye.getTextureDiffuseColor();
+            int dr = (tc >> 16) & 0xFF;
+            int dg = (tc >> 8) & 0xFF;
+            int db = tc & 0xFF;
             totalR += dr;
             totalG += dg;
             totalB += db;

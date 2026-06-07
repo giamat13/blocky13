@@ -1,7 +1,7 @@
 {
-  "parent": "minecraft:block/snow_height16",
+  "parent": "minecraft:block/cube_all",
   "textures": {
-    "particle": "minecraft:block/sand",
-    "texture": "minecraft:block/sand"
+    "all": "minecraft:block/sand",
+    "particle": "minecraft:block/sand"
   }
 }

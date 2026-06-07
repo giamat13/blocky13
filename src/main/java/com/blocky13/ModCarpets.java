@@ -1,6 +1,7 @@
 package com.blocky13;
 
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
+import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -11,9 +12,9 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.component.BannerPatternLayers;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BannerPatternLayers;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
@@ -32,13 +33,12 @@ public class ModCarpets {
             CARPETS.put(color, block);
         }
 
-        // Register the shared BlockEntityType for all carpet colors
         PatternedCarpetBlock[] allBlocks = CARPETS.values().toArray(new PatternedCarpetBlock[0]);
         Identifier betId = Identifier.fromNamespaceAndPath(Blocky13.MOD_ID, "patterned_carpet");
         CARPET_BLOCK_ENTITY_TYPE = Registry.register(
             BuiltInRegistries.BLOCK_ENTITY_TYPE,
             betId,
-            BlockEntityType.Builder.of(PatternedCarpetBlockEntity::new, allBlocks).build()
+            FabricBlockEntityTypeBuilder.create(PatternedCarpetBlockEntity::new, allBlocks).build()
         );
 
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS).register(output -> {
@@ -59,7 +59,6 @@ public class ModCarpets {
         return block;
     }
 
-    /** Returns the patterned carpet block for a given dye color, or null. */
     public static PatternedCarpetBlock forColor(DyeColor color) {
         return CARPETS.get(color);
     }

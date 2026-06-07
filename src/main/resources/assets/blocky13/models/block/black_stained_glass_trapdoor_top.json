@@ -1,4 +1,5 @@
 {
+  "render_type": "minecraft:translucent",
   "parent": "minecraft:block/template_trapdoor_top",
   "textures": {
     "texture": "minecraft:block/black_stained_glass"

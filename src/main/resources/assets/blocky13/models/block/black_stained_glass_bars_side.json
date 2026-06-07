@@ -1,4 +1,5 @@
 {
+  "render_type": "minecraft:translucent",
   "parent": "minecraft:block/template_bars_side",
   "textures": {
     "bars": "blocky13:block/black_stained_glass_bars",

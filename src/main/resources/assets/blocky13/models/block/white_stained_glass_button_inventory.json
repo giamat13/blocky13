@@ -1,4 +1,5 @@
 {
+  "render_type": "minecraft:translucent",
   "parent": "minecraft:block/button_inventory",
   "textures": {
     "texture": "minecraft:block/white_stained_glass"
