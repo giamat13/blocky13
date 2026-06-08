@@ -3,7 +3,8 @@
 	"package": "com.blocky13.client.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"ExampleClientMixin"
+		"ExampleClientMixin",
+		"LoomScreenMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

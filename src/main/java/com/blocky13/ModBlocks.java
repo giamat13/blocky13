@@ -124,16 +124,7 @@ public class ModBlocks {
             String base = (String) entry[0];
             Block copyFrom = (Block) entry[1];
             boolean rs = base.equals(REDSTONE_BASE);
-            registerSlab(base + "_slab", copyFrom, rs);
-            registerStairs(base + "_stairs", copyFrom, rs);
-            registerFence(base + "_fence", copyFrom, rs);
-            registerFenceGate(base + "_fence_gate", copyFrom, rs);
-            registerDoor(base + "_door", copyFrom, rs);
-            registerTrapdoor(base + "_trapdoor", copyFrom, rs);
-            registerPressurePlate(base + "_pressure_plate", copyFrom, rs);
-            registerButton(base + "_button", copyFrom, rs);
-            registerChain(base + "_chain", copyFrom, rs);
-            registerBars(base + "_bars", copyFrom, rs);
+            registerVariants(base, copyFrom, rs);
         }
 
         registerSandLayer();
@@ -164,8 +155,24 @@ public class ModBlocks {
             Registry.register(BuiltInRegistries.BLOCK, id, block);
             BUILDING_ORDER.add(block);
             COLORED_BRICKS[i] = block;
+            // Full variant set (slab, stairs, fence, ... bars) for each colored brick.
+            registerVariants(name, Blocks.BRICKS, false);
         }
         DyeBrushItem.registerFamily(COLORED_BRICKS);
+    }
+
+    /** Register the standard 10 variants for a base, copying properties from {@code copyFrom}. */
+    private static void registerVariants(String base, Block copyFrom, boolean rs) {
+        registerSlab(base + "_slab", copyFrom, rs);
+        registerStairs(base + "_stairs", copyFrom, rs);
+        registerFence(base + "_fence", copyFrom, rs);
+        registerFenceGate(base + "_fence_gate", copyFrom, rs);
+        registerDoor(base + "_door", copyFrom, rs);
+        registerTrapdoor(base + "_trapdoor", copyFrom, rs);
+        registerPressurePlate(base + "_pressure_plate", copyFrom, rs);
+        registerButton(base + "_button", copyFrom, rs);
+        registerChain(base + "_chain", copyFrom, rs);
+        registerBars(base + "_bars", copyFrom, rs);
     }
 
     private static void registerSandLayer() {
