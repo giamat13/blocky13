@@ -1,12 +1,10 @@
 package com.blocky13;
 
-import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 
 public class ModItems {
@@ -24,9 +22,8 @@ public class ModItems {
 
         Identifier recipeId = Identifier.fromNamespaceAndPath(Blocky13.MOD_ID, "brush_dye");
         Registry.register(BuiltInRegistries.RECIPE_SERIALIZER, recipeId, BrushDyeRecipe.SERIALIZER);
-
-        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.TOOLS_AND_UTILITIES).register(output -> {
-            output.accept(DYE_BRUSH);
-        });
+        // The dye brush is obtained only via crafting (brush + dye), which always applies a
+        // color, so it is intentionally not added to any creative tab (an uncolored one renders
+        // with no tint and looks wrong).
     }
 }
