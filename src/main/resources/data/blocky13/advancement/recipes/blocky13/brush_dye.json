@@ -1,0 +1,21 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_brush": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [{"items": "minecraft:brush"}]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "blocky13:brush_dye"
+      }
+    }
+  },
+  "requirements": [["has_the_recipe", "has_brush"]],
+  "rewards": {
+    "recipes": ["blocky13:brush_dye"]
+  }
+}

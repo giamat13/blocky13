@@ -1,0 +1,7 @@
+{
+  "render_type": "minecraft:translucent",
+  "parent": "minecraft:block/pressure_plate_down",
+  "textures": {
+    "texture": "minecraft:block/blue_stained_glass"
+  }
+}

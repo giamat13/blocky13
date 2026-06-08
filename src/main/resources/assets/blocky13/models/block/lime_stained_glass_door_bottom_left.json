@@ -1,0 +1,8 @@
+{
+  "render_type": "minecraft:translucent",
+  "parent": "minecraft:block/door_bottom_left",
+  "textures": {
+    "top": "minecraft:block/lime_stained_glass",
+    "bottom": "minecraft:block/lime_stained_glass"
+  }
+}

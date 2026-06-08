@@ -1,0 +1,7 @@
+{
+  "render_type": "minecraft:translucent",
+  "parent": "minecraft:block/button_pressed",
+  "textures": {
+    "texture": "minecraft:block/white_stained_glass"
+  }
+}

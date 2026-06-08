@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    "minecraft:lime_concrete"
+  ],
+  "result": {
+    "count": 1,
+    "id": "blocky13:lime_concrete_button"
+  }
+}

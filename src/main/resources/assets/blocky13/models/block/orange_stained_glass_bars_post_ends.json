@@ -1,0 +1,9 @@
+{
+  "render_type": "minecraft:translucent",
+  "parent": "minecraft:block/template_bars_post_ends",
+  "textures": {
+    "bars": "blocky13:block/orange_stained_glass_bars",
+    "edge": "blocky13:block/orange_stained_glass_bars",
+    "particle": "blocky13:block/orange_stained_glass_bars"
+  }
+}

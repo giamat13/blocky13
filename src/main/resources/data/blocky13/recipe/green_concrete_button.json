@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    "minecraft:green_concrete"
+  ],
+  "result": {
+    "count": 1,
+    "id": "blocky13:green_concrete_button"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    "minecraft:pink_carpet",
+    "minecraft:pink_dye"
+  ],
+  "result": {
+    "count": 1,
+    "id": "blocky13:pink_patterned_carpet"
+  }
+}

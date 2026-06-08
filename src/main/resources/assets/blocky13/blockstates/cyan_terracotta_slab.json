@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "blocky13:block/cyan_terracotta_slab"
+    },
+    "type=top": {
+      "model": "blocky13:block/cyan_terracotta_slab_top"
+    },
+    "type=double": {
+      "model": "blocky13:block/cyan_terracotta_slab_double"
+    }
+  }
+}

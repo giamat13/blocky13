@@ -29,10 +29,14 @@ import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.state.properties.BlockSetType;
 import net.minecraft.world.level.block.state.properties.WoodType;
 
 public class ModBlocks {
+
+    /** Colored brick base blocks in DyeColor.values() ordinal order (16 entries). */
+    public static final Block[] COLORED_BRICKS = new Block[16];
     /** Every mod block, in registration order -> Building Blocks tab. */
     private static final List<Block> BUILDING_ORDER = new ArrayList<>();
     /** Blocks made of redstone -> also shown in the Redstone Blocks tab. */
@@ -58,6 +62,59 @@ public class ModBlocks {
             {"raw_gold_block",   Blocks.RAW_GOLD_BLOCK},
             {"quartz_block",    Blocks.QUARTZ_BLOCK},
             {"amethyst_block",  Blocks.AMETHYST_BLOCK},
+            // Concrete (issue #4)
+            {"white_concrete",        Blocks.WHITE_CONCRETE},
+            {"orange_concrete",       Blocks.ORANGE_CONCRETE},
+            {"magenta_concrete",      Blocks.MAGENTA_CONCRETE},
+            {"light_blue_concrete",   Blocks.LIGHT_BLUE_CONCRETE},
+            {"yellow_concrete",       Blocks.YELLOW_CONCRETE},
+            {"lime_concrete",         Blocks.LIME_CONCRETE},
+            {"pink_concrete",         Blocks.PINK_CONCRETE},
+            {"gray_concrete",         Blocks.GRAY_CONCRETE},
+            {"light_gray_concrete",   Blocks.LIGHT_GRAY_CONCRETE},
+            {"cyan_concrete",         Blocks.CYAN_CONCRETE},
+            {"purple_concrete",       Blocks.PURPLE_CONCRETE},
+            {"blue_concrete",         Blocks.BLUE_CONCRETE},
+            {"brown_concrete",        Blocks.BROWN_CONCRETE},
+            {"green_concrete",        Blocks.GREEN_CONCRETE},
+            {"red_concrete",          Blocks.RED_CONCRETE},
+            {"black_concrete",        Blocks.BLACK_CONCRETE},
+            // Terracotta (issue #4)
+            {"terracotta",            Blocks.TERRACOTTA},
+            {"white_terracotta",      Blocks.WHITE_TERRACOTTA},
+            {"orange_terracotta",     Blocks.ORANGE_TERRACOTTA},
+            {"magenta_terracotta",    Blocks.MAGENTA_TERRACOTTA},
+            {"light_blue_terracotta", Blocks.LIGHT_BLUE_TERRACOTTA},
+            {"yellow_terracotta",     Blocks.YELLOW_TERRACOTTA},
+            {"lime_terracotta",       Blocks.LIME_TERRACOTTA},
+            {"pink_terracotta",       Blocks.PINK_TERRACOTTA},
+            {"gray_terracotta",       Blocks.GRAY_TERRACOTTA},
+            {"light_gray_terracotta", Blocks.LIGHT_GRAY_TERRACOTTA},
+            {"cyan_terracotta",       Blocks.CYAN_TERRACOTTA},
+            {"purple_terracotta",     Blocks.PURPLE_TERRACOTTA},
+            {"blue_terracotta",       Blocks.BLUE_TERRACOTTA},
+            {"brown_terracotta",      Blocks.BROWN_TERRACOTTA},
+            {"green_terracotta",      Blocks.GREEN_TERRACOTTA},
+            {"red_terracotta",        Blocks.RED_TERRACOTTA},
+            {"black_terracotta",      Blocks.BLACK_TERRACOTTA},
+            // Glass (issue #4)
+            {"glass",                    Blocks.GLASS},
+            {"white_stained_glass",      Blocks.WHITE_STAINED_GLASS},
+            {"orange_stained_glass",     Blocks.ORANGE_STAINED_GLASS},
+            {"magenta_stained_glass",    Blocks.MAGENTA_STAINED_GLASS},
+            {"light_blue_stained_glass", Blocks.LIGHT_BLUE_STAINED_GLASS},
+            {"yellow_stained_glass",     Blocks.YELLOW_STAINED_GLASS},
+            {"lime_stained_glass",       Blocks.LIME_STAINED_GLASS},
+            {"pink_stained_glass",       Blocks.PINK_STAINED_GLASS},
+            {"gray_stained_glass",       Blocks.GRAY_STAINED_GLASS},
+            {"light_gray_stained_glass", Blocks.LIGHT_GRAY_STAINED_GLASS},
+            {"cyan_stained_glass",       Blocks.CYAN_STAINED_GLASS},
+            {"purple_stained_glass",     Blocks.PURPLE_STAINED_GLASS},
+            {"blue_stained_glass",       Blocks.BLUE_STAINED_GLASS},
+            {"brown_stained_glass",      Blocks.BROWN_STAINED_GLASS},
+            {"green_stained_glass",      Blocks.GREEN_STAINED_GLASS},
+            {"red_stained_glass",        Blocks.RED_STAINED_GLASS},
+            {"black_stained_glass",      Blocks.BLACK_STAINED_GLASS},
     };
 
     public static void registerModBlocks() {
@@ -67,17 +124,11 @@ public class ModBlocks {
             String base = (String) entry[0];
             Block copyFrom = (Block) entry[1];
             boolean rs = base.equals(REDSTONE_BASE);
-            registerSlab(base + "_slab", copyFrom, rs);
-            registerStairs(base + "_stairs", copyFrom, rs);
-            registerFence(base + "_fence", copyFrom, rs);
-            registerFenceGate(base + "_fence_gate", copyFrom, rs);
-            registerDoor(base + "_door", copyFrom, rs);
-            registerTrapdoor(base + "_trapdoor", copyFrom, rs);
-            registerPressurePlate(base + "_pressure_plate", copyFrom, rs);
-            registerButton(base + "_button", copyFrom, rs);
-            registerChain(base + "_chain", copyFrom, rs);
-            registerBars(base + "_bars", copyFrom, rs);
+            registerVariants(base, copyFrom, rs);
         }
+
+        registerSandLayer();
+        registerColoredBricks();
 
         // All blocks live in Building Blocks; redstone-material variants also appear in Redstone Blocks.
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS).register(output -> {
@@ -90,6 +141,49 @@ public class ModBlocks {
                 output.accept(block);
             }
         });
+    }
+
+    private static void registerColoredBricks() {
+        DyeColor[] colors = DyeColor.values();
+        for (int i = 0; i < colors.length; i++) {
+            String name = colors[i].getName() + "_bricks";
+            Identifier id = id(name);
+            BlockBehaviour.Properties props = BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS)
+                    .setId(ResourceKey.create(Registries.BLOCK, id));
+            Block block = new Block(props);
+            registerBlockItem(name, block);
+            Registry.register(BuiltInRegistries.BLOCK, id, block);
+            BUILDING_ORDER.add(block);
+            COLORED_BRICKS[i] = block;
+            // Full variant set (slab, stairs, fence, ... bars) for each colored brick.
+            registerVariants(name, Blocks.BRICKS, false);
+        }
+        DyeBrushItem.registerFamily(COLORED_BRICKS);
+    }
+
+    /** Register the standard 10 variants for a base, copying properties from {@code copyFrom}. */
+    private static void registerVariants(String base, Block copyFrom, boolean rs) {
+        registerSlab(base + "_slab", copyFrom, rs);
+        registerStairs(base + "_stairs", copyFrom, rs);
+        registerFence(base + "_fence", copyFrom, rs);
+        registerFenceGate(base + "_fence_gate", copyFrom, rs);
+        registerDoor(base + "_door", copyFrom, rs);
+        registerTrapdoor(base + "_trapdoor", copyFrom, rs);
+        registerPressurePlate(base + "_pressure_plate", copyFrom, rs);
+        registerButton(base + "_button", copyFrom, rs);
+        registerChain(base + "_chain", copyFrom, rs);
+        registerBars(base + "_bars", copyFrom, rs);
+    }
+
+    private static void registerSandLayer() {
+        String name = "sand_layer";
+        Identifier id = id(name);
+        BlockBehaviour.Properties props = BlockBehaviour.Properties.ofFullCopy(Blocks.SAND)
+                .setId(ResourceKey.create(Registries.BLOCK, id));
+        SandLayerBlock block = new SandLayerBlock(props);
+        registerBlockItem(name, block);
+        Registry.register(BuiltInRegistries.BLOCK, id, block);
+        BUILDING_ORDER.add(block);
     }
 
     private static void registerSlab(String name, Block copyFrom, boolean rs) {

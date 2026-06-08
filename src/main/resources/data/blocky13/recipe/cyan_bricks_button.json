@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    "blocky13:cyan_bricks"
+  ],
+  "result": {
+    "count": 1,
+    "id": "blocky13:cyan_bricks_button"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/door_bottom_left_open",
+  "textures": {
+    "top": "minecraft:block/brown_terracotta",
+    "bottom": "minecraft:block/brown_terracotta"
+  }
+}

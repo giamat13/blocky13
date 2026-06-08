@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    "minecraft:lime_carpet",
+    "minecraft:lime_dye"
+  ],
+  "result": {
+    "count": 1,
+    "id": "blocky13:lime_patterned_carpet"
+  }
+}

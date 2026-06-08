@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    "blocky13:magenta_bricks"
+  ],
+  "result": {
+    "count": 1,
+    "id": "blocky13:magenta_bricks_button"
+  }
+}

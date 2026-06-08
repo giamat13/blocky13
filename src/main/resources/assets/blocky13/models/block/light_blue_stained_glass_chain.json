@@ -1,0 +1,8 @@
+{
+  "render_type": "minecraft:translucent",
+  "parent": "minecraft:block/template_chain",
+  "textures": {
+    "texture": "blocky13:block/light_blue_stained_glass_chain",
+    "particle": "blocky13:block/light_blue_stained_glass_chain"
+  }
+}

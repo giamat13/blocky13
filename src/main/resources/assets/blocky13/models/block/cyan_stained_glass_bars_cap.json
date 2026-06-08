@@ -1,0 +1,9 @@
+{
+  "render_type": "minecraft:translucent",
+  "parent": "minecraft:block/template_bars_cap",
+  "textures": {
+    "bars": "blocky13:block/cyan_stained_glass_bars",
+    "edge": "blocky13:block/cyan_stained_glass_bars",
+    "particle": "blocky13:block/cyan_stained_glass_bars"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "render_type": "minecraft:translucent",
+  "parent": "minecraft:block/template_bars_side_alt",
+  "textures": {
+    "bars": "blocky13:block/red_stained_glass_bars",
+    "edge": "blocky13:block/red_stained_glass_bars",
+    "particle": "blocky13:block/red_stained_glass_bars"
+  }
+}
