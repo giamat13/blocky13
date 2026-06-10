@@ -16,6 +16,7 @@ Blocky13 expands the building possibilities in Minecraft by creating a comprehen
 - **Buttons** — Redstone input triggers
 - **Chains** — Hanging connectors
 - **Bars** — Decorative barriers
+- **Walls** — Connecting barriers that lower fence gates
 
 ## Redstone-Powered Variants
 
@@ -64,8 +65,9 @@ The mod is structured as a standard Fabric mod project with:
 To add a new base material variant set:
 
 1. Add the material to the `BASES` array in `ModBlocks.java` with its ID and a vanilla block to copy properties from
-2. The registration system automatically generates all 10 variants
+2. The registration system automatically generates all 11 variants
 3. Specify if the variant should appear in the Redstone Blocks tab via the `registerSlab`/`registerStairs`/etc. calls
+4. Regenerate the JSON assets and block tags with `python3 generate_assets.py` (or `python3 generate_assets.py --walls-tags` to refresh only the walls and the connection/mining tags)
 
 ## License
 

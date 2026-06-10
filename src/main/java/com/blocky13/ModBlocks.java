@@ -27,6 +27,7 @@ import net.minecraft.world.level.block.PressurePlateBlock;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
+import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.item.DyeColor;
@@ -173,6 +174,7 @@ public class ModBlocks {
         registerButton(base + "_button", copyFrom, rs);
         registerChain(base + "_chain", copyFrom, rs);
         registerBars(base + "_bars", copyFrom, rs);
+        registerWall(base + "_wall", copyFrom, rs);
     }
 
     private static void registerSandLayer() {
@@ -232,6 +234,11 @@ public class ModBlocks {
     private static void registerBars(String name, Block copyFrom, boolean rs) {
         BlockBehaviour.Properties p = props(name, copyFrom).noOcclusion();
         register(name, rs ? new PoweredBars(p) : new IronBarsBlock(p), rs);
+    }
+
+    private static void registerWall(String name, Block copyFrom, boolean rs) {
+        BlockBehaviour.Properties p = props(name, copyFrom).noOcclusion();
+        register(name, rs ? new PoweredWall(p) : new WallBlock(p), rs);
     }
 
     private static BlockBehaviour.Properties props(String name, Block copyFrom) {
@@ -304,6 +311,12 @@ public class ModBlocks {
 
     private static class PoweredBars extends IronBarsBlock {
         PoweredBars(Properties p) { super(p); }
+        @Override protected boolean isSignalSource(BlockState s) { return true; }
+        @Override protected int getSignal(BlockState s, BlockGetter l, BlockPos pos, Direction d) { return 15; }
+    }
+
+    private static class PoweredWall extends WallBlock {
+        PoweredWall(Properties p) { super(p); }
         @Override protected boolean isSignalSource(BlockState s) { return true; }
         @Override protected int getSignal(BlockState s, BlockGetter l, BlockPos pos, Direction d) { return 15; }
     }

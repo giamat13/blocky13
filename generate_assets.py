@@ -4,8 +4,8 @@ Generate all JSON and PNG assets for new material bases in blocky13.
 Run from the project root.
 """
 import os
+import sys
 import json
-from PIL import Image
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 ASSETS   = os.path.join(ROOT, "src/main/resources/assets/blocky13")
@@ -102,6 +102,7 @@ BRICKS_MATERIALS = [
 
 def create_brick_reference(path):
     """Create a 16x16 grayscale brick pattern PNG at the given path."""
+    from PIL import Image
     size = 16
     mortar = (80, 80, 80, 255)
     brick  = (200, 200, 200, 255)
@@ -134,6 +135,7 @@ def title_name(base_id):
 
 
 def recolor_texture(ref_path, rgb, output_path, alpha=255):
+    from PIL import Image
     ref = Image.open(ref_path).convert("RGBA")
     w, h = ref.size
     ref_pixels = list(ref.getdata())
@@ -959,7 +961,187 @@ def generate_lang_entries():
     print(f"Updated lang file with {len(MATERIALS)} vanilla materials and {len(BRICKS_MATERIALS)} brick sets")
 
 
+# --------------------------------------------------------------------------- #
+# Walls (issue #11) + connection / mining tags (issues #15, #16)                #
+#                                                                               #
+# Walls and the block tags cover *every* registered base — including the        #
+# original hand-authored metal/dirt bases that are not part of MATERIALS /      #
+# BRICKS_MATERIALS. To stay in sync with whatever is actually registered, the   #
+# base list and each base's texture are discovered from the existing            #
+# `<base>_slab` block model rather than hard-coded here.                         #
+# --------------------------------------------------------------------------- #
+
+# Bases whose blocks are mined with a shovel rather than a pickaxe.
+SHOVEL_BASES = {"dirt"}
+# Pickaxe tier required to harvest drops, mirroring the vanilla source block.
+NEEDS_STONE_BASES = {"iron_block", "raw_iron_block", "copper_block",
+                     "raw_copper_block", "lapis_block"}
+NEEDS_IRON_BASES = {"gold_block", "raw_gold_block", "redstone_block",
+                    "emerald_block", "diamond_block"}
+NEEDS_DIAMOND_BASES = {"netherite_block"}
+
+
+def _discover_bases():
+    """Return every registered variant base, discovered from existing slab models."""
+    bs_dir = os.path.join(ASSETS, "blockstates")
+    bases = [f[:-len("_slab.json")] for f in os.listdir(bs_dir)
+             if f.endswith("_slab.json")]
+    return sorted(bases)
+
+
+def _base_side_texture(base):
+    """(texture, render_type) used by a base, read from its slab block model."""
+    path = os.path.join(ASSETS, "models/block", f"{base}_slab.json")
+    with open(path) as f:
+        model = json.load(f)
+    return model["textures"]["side"], model.get("render_type")
+
+
+def _base_ingredient(base):
+    return f"blocky13:{base}" if base.endswith("_bricks") else f"minecraft:{base}"
+
+
+def _mining_tool(base):
+    """('shovel'|'pickaxe'|'none', tier) for a base, matching vanilla behaviour."""
+    if base in SHOVEL_BASES:
+        return "shovel", None
+    if "glass" in base:            # glass is broken by hand, no tool tier
+        return "none", None
+    if base in NEEDS_STONE_BASES:
+        return "pickaxe", "stone"
+    if base in NEEDS_IRON_BASES:
+        return "pickaxe", "iron"
+    if base in NEEDS_DIAMOND_BASES:
+        return "pickaxe", "diamond"
+    return "pickaxe", None
+
+
+def bs_wall(base):
+    side = f"blocky13:block/{base}_wall_side"
+    side_tall = f"blocky13:block/{base}_wall_side_tall"
+    return {
+        "multipart": [
+            {"apply": {"model": f"blocky13:block/{base}_wall_post"}, "when": {"up": "true"}},
+            {"apply": {"model": side, "uvlock": True},            "when": {"north": "low"}},
+            {"apply": {"model": side, "uvlock": True, "y": 90},   "when": {"east": "low"}},
+            {"apply": {"model": side, "uvlock": True, "y": 180},  "when": {"south": "low"}},
+            {"apply": {"model": side, "uvlock": True, "y": 270},  "when": {"west": "low"}},
+            {"apply": {"model": side_tall, "uvlock": True},           "when": {"north": "tall"}},
+            {"apply": {"model": side_tall, "uvlock": True, "y": 90},  "when": {"east": "tall"}},
+            {"apply": {"model": side_tall, "uvlock": True, "y": 180}, "when": {"south": "tall"}},
+            {"apply": {"model": side_tall, "uvlock": True, "y": 270}, "when": {"west": "tall"}},
+        ]
+    }
+
+
+def _wall_model(parent, tex, render_type):
+    model = {"parent": parent, "textures": {"wall": tex}}
+    if render_type:
+        model["render_type"] = render_type
+    return model
+
+
+def recipe_wall(base, ing):
+    return {"type": "minecraft:crafting_shaped", "category": "building",
+            "key": {"#": ing},
+            "pattern": ["###", "###"],
+            "result": {"count": 6, "id": f"blocky13:{base}_wall"}}
+
+
+def generate_walls_and_tags():
+    bs_dir  = os.path.join(ASSETS, "blockstates")
+    mb_dir  = os.path.join(ASSETS, "models/block")
+    mi_dir  = os.path.join(ASSETS, "models/item")
+    rec_dir = os.path.join(DATA,   "recipe")
+    lt_dir  = os.path.join(DATA,   "loot_table/blocks")
+    adv_dir = os.path.join(DATA,   "advancement/recipes/blocky13")
+    mc_tags = os.path.join(ROOT, "src/main/resources/data/minecraft/tags/block")
+
+    bases = _discover_bases()
+
+    walls_tag, fences_tag = [], []
+    pickaxe, shovel = [], []
+    needs_stone, needs_iron, needs_diamond = [], [], []
+
+    # Variants that share the base's mining behaviour (everything we register).
+    minted_variants = VARIANTS + ["wall"]
+
+    for base in bases:
+        tex, render_type = _base_side_texture(base)
+        ing = _base_ingredient(base)
+
+        # ---- wall assets ----
+        write_json(f"{bs_dir}/{base}_wall.json", bs_wall(base))
+        write_json(f"{mb_dir}/{base}_wall_post.json",
+                   _wall_model("minecraft:block/template_wall_post", tex, render_type))
+        write_json(f"{mb_dir}/{base}_wall_side.json",
+                   _wall_model("minecraft:block/template_wall_side", tex, render_type))
+        write_json(f"{mb_dir}/{base}_wall_side_tall.json",
+                   _wall_model("minecraft:block/template_wall_side_tall", tex, render_type))
+        write_json(f"{mb_dir}/{base}_wall_inventory.json",
+                   _wall_model("minecraft:block/wall_inventory", tex, render_type))
+        write_json(f"{mi_dir}/{base}_wall.json",
+                   {"parent": f"blocky13:block/{base}_wall_inventory"})
+        write_json(f"{rec_dir}/{base}_wall.json", recipe_wall(base, ing))
+        write_json(f"{lt_dir}/{base}_wall.json", loot_simple(f"{base}_wall"))
+        write_json(f"{adv_dir}/{base}_wall.json", advancement(base, "wall", ing))
+
+        # ---- connection tags ----
+        walls_tag.append(f"blocky13:{base}_wall")
+        fences_tag.append(f"blocky13:{base}_fence")
+
+        # ---- mining tags ----
+        tool, tier = _mining_tool(base)
+        block_ids = [f"blocky13:{base}_{v}" for v in minted_variants]
+        if base.endswith("_bricks"):
+            block_ids.append(f"blocky13:{base}")  # the colored brick block itself
+        if tool == "pickaxe":
+            pickaxe.extend(block_ids)
+            if tier == "stone":
+                needs_stone.extend(block_ids)
+            elif tier == "iron":
+                needs_iron.extend(block_ids)
+            elif tier == "diamond":
+                needs_diamond.extend(block_ids)
+        elif tool == "shovel":
+            shovel.extend(block_ids)
+
+    # The standalone sand layer is shovel-mined too.
+    shovel.append("blocky13:sand_layer")
+
+    def tag(values):
+        return {"replace": False, "values": sorted(values)}
+
+    write_json(f"{mc_tags}/fences.json", tag(fences_tag))
+    write_json(f"{mc_tags}/walls.json", tag(walls_tag))
+    write_json(f"{mc_tags}/mineable/pickaxe.json", tag(pickaxe))
+    write_json(f"{mc_tags}/mineable/shovel.json", tag(shovel))
+    write_json(f"{mc_tags}/needs_stone_tool.json", tag(needs_stone))
+    write_json(f"{mc_tags}/needs_iron_tool.json", tag(needs_iron))
+    write_json(f"{mc_tags}/needs_diamond_tool.json", tag(needs_diamond))
+
+    # ---- lang entries for every wall ----
+    lang_path = os.path.join(ASSETS, "lang/en_us.json")
+    with open(lang_path) as f:
+        lang = json.load(f)
+    for base in bases:
+        full_name = f"{title_name(base)} Wall"
+        for prefix in ("block", "item"):
+            key = f"{prefix}.blocky13.{base}_wall"
+            if key not in lang:
+                lang[key] = full_name
+    with open(lang_path, "w") as f:
+        json.dump(lang, f, indent=2, ensure_ascii=False)
+
+    print(f"Generated walls + connection/mining tags for {len(bases)} bases.")
+
+
 if __name__ == "__main__":
+    if "--walls-tags" in sys.argv:
+        # No PIL needed: walls reuse existing base textures.
+        generate_walls_and_tags()
+        sys.exit(0)
+
     for base_id, mc_tex, rgb, is_transparent in MATERIALS:
         print(f"Generating: {base_id}")
         generate_for_material(base_id, mc_tex, rgb, is_transparent)
@@ -971,4 +1153,5 @@ if __name__ == "__main__":
 
     generate_brush_assets()
     generate_lang_entries()
+    generate_walls_and_tags()
     print(f"\nDone! Generated assets for {len(MATERIALS)} materials and {len(BRICKS_MATERIALS)} brick sets.")
