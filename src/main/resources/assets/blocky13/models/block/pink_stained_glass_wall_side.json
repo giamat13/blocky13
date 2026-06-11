@@ -1,7 +1,9 @@
 {
   "parent": "minecraft:block/template_wall_side",
   "textures": {
-    "wall": "minecraft:block/pink_stained_glass"
+    "wall": "minecraft:block/pink_stained_glass",
+    "texture": "minecraft:block/pink_stained_glass",
+    "particle": "minecraft:block/pink_stained_glass"
   },
   "render_type": "minecraft:translucent"
 }

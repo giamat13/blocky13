@@ -1,6 +1,8 @@
 {
   "parent": "minecraft:block/wall_inventory",
   "textures": {
-    "wall": "minecraft:block/coal_block"
+    "wall": "minecraft:block/coal_block",
+    "texture": "minecraft:block/coal_block",
+    "particle": "minecraft:block/coal_block"
   }
 }

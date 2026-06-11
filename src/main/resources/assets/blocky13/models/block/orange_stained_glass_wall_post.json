@@ -1,7 +1,9 @@
 {
   "parent": "minecraft:block/template_wall_post",
   "textures": {
-    "wall": "minecraft:block/orange_stained_glass"
+    "wall": "minecraft:block/orange_stained_glass",
+    "texture": "minecraft:block/orange_stained_glass",
+    "particle": "minecraft:block/orange_stained_glass"
   },
   "render_type": "minecraft:translucent"
 }

@@ -1035,7 +1035,11 @@ def bs_wall(base):
 
 
 def _wall_model(parent, tex, render_type):
-    model = {"parent": parent, "textures": {"wall": tex}}
+    # Bind the texture under every variable name the vanilla wall templates have
+    # used across versions ("wall" today; "texture"/"particle" as safe aliases).
+    # Unused texture variables are ignored by the model loader, so listing all
+    # of them guarantees the sprite binds regardless of the template's variable.
+    model = {"parent": parent, "textures": {"wall": tex, "texture": tex, "particle": tex}}
     if render_type:
         model["render_type"] = render_type
     return model

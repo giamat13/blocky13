@@ -1,6 +1,8 @@
 {
   "parent": "minecraft:block/wall_inventory",
   "textures": {
-    "wall": "minecraft:block/white_terracotta"
+    "wall": "minecraft:block/white_terracotta",
+    "texture": "minecraft:block/white_terracotta",
+    "particle": "minecraft:block/white_terracotta"
   }
 }

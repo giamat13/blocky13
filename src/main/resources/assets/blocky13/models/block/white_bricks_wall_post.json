@@ -1,6 +1,8 @@
 {
   "parent": "minecraft:block/template_wall_post",
   "textures": {
-    "wall": "blocky13:block/white_bricks"
+    "wall": "blocky13:block/white_bricks",
+    "texture": "blocky13:block/white_bricks",
+    "particle": "blocky13:block/white_bricks"
   }
 }
