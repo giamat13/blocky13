@@ -1045,6 +1045,31 @@ def _wall_model(parent, tex, render_type):
     return model
 
 
+def wall_inventory_model(tex, render_type):
+    # Self-contained inventory model: the geometry and texture references live
+    # here (using "#wall"), so the sprite binds without depending on the texture
+    # variable name used inside minecraft:block/wall_inventory. The block/block
+    # parent only supplies the standard inventory display transforms.
+    model = {
+        "parent": "minecraft:block/block",
+        "textures": {"wall": tex, "particle": tex},
+        "elements": [
+            {"from": [4, 0, 0], "to": [12, 16, 16],
+             "faces": {
+                 "down":  {"uv": [4, 0, 12, 16], "texture": "#wall", "cullface": "down"},
+                 "up":    {"uv": [4, 0, 12, 16], "texture": "#wall", "cullface": "up"},
+                 "north": {"uv": [4, 0, 12, 16], "texture": "#wall", "cullface": "north"},
+                 "south": {"uv": [4, 0, 12, 16], "texture": "#wall", "cullface": "south"},
+                 "west":  {"uv": [0, 0, 16, 16], "texture": "#wall"},
+                 "east":  {"uv": [0, 0, 16, 16], "texture": "#wall"},
+             }},
+        ],
+    }
+    if render_type:
+        model["render_type"] = render_type
+    return model
+
+
 def recipe_wall(base, ing):
     return {"type": "minecraft:crafting_shaped", "category": "building",
             "key": {"#": ing},
@@ -1083,7 +1108,7 @@ def generate_walls_and_tags():
         write_json(f"{mb_dir}/{base}_wall_side_tall.json",
                    _wall_model("minecraft:block/template_wall_side_tall", tex, render_type))
         write_json(f"{mb_dir}/{base}_wall_inventory.json",
-                   _wall_model("minecraft:block/wall_inventory", tex, render_type))
+                   wall_inventory_model(tex, render_type))
         write_json(f"{mi_dir}/{base}_wall.json",
                    {"parent": f"blocky13:block/{base}_wall_inventory"})
         write_json(f"{rec_dir}/{base}_wall.json", recipe_wall(base, ing))
