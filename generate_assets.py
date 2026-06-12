@@ -1081,6 +1081,7 @@ def generate_walls_and_tags():
     bs_dir  = os.path.join(ASSETS, "blockstates")
     mb_dir  = os.path.join(ASSETS, "models/block")
     mi_dir  = os.path.join(ASSETS, "models/item")
+    it_dir  = os.path.join(ASSETS, "items")
     rec_dir = os.path.join(DATA,   "recipe")
     lt_dir  = os.path.join(DATA,   "loot_table/blocks")
     adv_dir = os.path.join(DATA,   "advancement/recipes/blocky13")
@@ -1111,6 +1112,9 @@ def generate_walls_and_tags():
                    wall_inventory_model(tex, render_type))
         write_json(f"{mi_dir}/{base}_wall.json",
                    {"parent": f"blocky13:block/{base}_wall_inventory"})
+        write_json(f"{it_dir}/{base}_wall.json",
+                   {"model": {"type": "minecraft:model",
+                              "model": f"blocky13:item/{base}_wall"}})
         write_json(f"{rec_dir}/{base}_wall.json", recipe_wall(base, ing))
         write_json(f"{lt_dir}/{base}_wall.json", loot_simple(f"{base}_wall"))
         write_json(f"{adv_dir}/{base}_wall.json", advancement(base, "wall", ing))
