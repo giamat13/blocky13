@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/template_wall_post",
+  "textures": {
+    "wall": "minecraft:block/raw_iron_block",
+    "texture": "minecraft:block/raw_iron_block",
+    "particle": "minecraft:block/raw_iron_block"
+  }
+}

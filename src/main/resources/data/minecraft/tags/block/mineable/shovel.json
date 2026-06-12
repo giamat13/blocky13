@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "blocky13:dirt_bars",
+    "blocky13:dirt_button",
+    "blocky13:dirt_chain",
+    "blocky13:dirt_door",
+    "blocky13:dirt_fence",
+    "blocky13:dirt_fence_gate",
+    "blocky13:dirt_pressure_plate",
+    "blocky13:dirt_slab",
+    "blocky13:dirt_stairs",
+    "blocky13:dirt_trapdoor",
+    "blocky13:dirt_wall",
+    "blocky13:sand_layer"
+  ]
+}
