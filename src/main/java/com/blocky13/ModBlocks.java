@@ -46,77 +46,56 @@ public class ModBlocks {
     /** The base whose variants act as redstone power sources and appear in the Redstone tab. */
     private static final String REDSTONE_BASE = "redstone_block";
 
-    /** Base blocks (id prefix -> vanilla block to copy properties from). */
-    private static final Object[][] BASES = {
-            {"dirt",            Blocks.DIRT},
-            {"iron_block",      Blocks.IRON_BLOCK},
-            {"coal_block",      Blocks.COAL_BLOCK},
-            {"copper_block",    Blocks.COPPER_BLOCK},
-            {"gold_block",      Blocks.GOLD_BLOCK},
-            {"redstone_block",  Blocks.REDSTONE_BLOCK},
-            {"emerald_block",   Blocks.EMERALD_BLOCK},
-            {"lapis_block",     Blocks.LAPIS_BLOCK},
-            {"diamond_block",   Blocks.DIAMOND_BLOCK},
-            {"netherite_block", Blocks.NETHERITE_BLOCK},
-            {"raw_iron_block",   Blocks.RAW_IRON_BLOCK},
-            {"raw_copper_block", Blocks.RAW_COPPER_BLOCK},
-            {"raw_gold_block",   Blocks.RAW_GOLD_BLOCK},
-            {"quartz_block",    Blocks.QUARTZ_BLOCK},
-            {"amethyst_block",  Blocks.AMETHYST_BLOCK},
-            // Concrete (issue #4)
-            {"white_concrete",        Blocks.WHITE_CONCRETE},
-            {"orange_concrete",       Blocks.ORANGE_CONCRETE},
-            {"magenta_concrete",      Blocks.MAGENTA_CONCRETE},
-            {"light_blue_concrete",   Blocks.LIGHT_BLUE_CONCRETE},
-            {"yellow_concrete",       Blocks.YELLOW_CONCRETE},
-            {"lime_concrete",         Blocks.LIME_CONCRETE},
-            {"pink_concrete",         Blocks.PINK_CONCRETE},
-            {"gray_concrete",         Blocks.GRAY_CONCRETE},
-            {"light_gray_concrete",   Blocks.LIGHT_GRAY_CONCRETE},
-            {"cyan_concrete",         Blocks.CYAN_CONCRETE},
-            {"purple_concrete",       Blocks.PURPLE_CONCRETE},
-            {"blue_concrete",         Blocks.BLUE_CONCRETE},
-            {"brown_concrete",        Blocks.BROWN_CONCRETE},
-            {"green_concrete",        Blocks.GREEN_CONCRETE},
-            {"red_concrete",          Blocks.RED_CONCRETE},
-            {"black_concrete",        Blocks.BLACK_CONCRETE},
-            // Terracotta (issue #4)
-            {"terracotta",            Blocks.TERRACOTTA},
-            {"white_terracotta",      Blocks.WHITE_TERRACOTTA},
-            {"orange_terracotta",     Blocks.ORANGE_TERRACOTTA},
-            {"magenta_terracotta",    Blocks.MAGENTA_TERRACOTTA},
-            {"light_blue_terracotta", Blocks.LIGHT_BLUE_TERRACOTTA},
-            {"yellow_terracotta",     Blocks.YELLOW_TERRACOTTA},
-            {"lime_terracotta",       Blocks.LIME_TERRACOTTA},
-            {"pink_terracotta",       Blocks.PINK_TERRACOTTA},
-            {"gray_terracotta",       Blocks.GRAY_TERRACOTTA},
-            {"light_gray_terracotta", Blocks.LIGHT_GRAY_TERRACOTTA},
-            {"cyan_terracotta",       Blocks.CYAN_TERRACOTTA},
-            {"purple_terracotta",     Blocks.PURPLE_TERRACOTTA},
-            {"blue_terracotta",       Blocks.BLUE_TERRACOTTA},
-            {"brown_terracotta",      Blocks.BROWN_TERRACOTTA},
-            {"green_terracotta",      Blocks.GREEN_TERRACOTTA},
-            {"red_terracotta",        Blocks.RED_TERRACOTTA},
-            {"black_terracotta",      Blocks.BLACK_TERRACOTTA},
-            // Glass (issue #4)
-            {"glass",                    Blocks.GLASS},
-            {"white_stained_glass",      Blocks.WHITE_STAINED_GLASS},
-            {"orange_stained_glass",     Blocks.ORANGE_STAINED_GLASS},
-            {"magenta_stained_glass",    Blocks.MAGENTA_STAINED_GLASS},
-            {"light_blue_stained_glass", Blocks.LIGHT_BLUE_STAINED_GLASS},
-            {"yellow_stained_glass",     Blocks.YELLOW_STAINED_GLASS},
-            {"lime_stained_glass",       Blocks.LIME_STAINED_GLASS},
-            {"pink_stained_glass",       Blocks.PINK_STAINED_GLASS},
-            {"gray_stained_glass",       Blocks.GRAY_STAINED_GLASS},
-            {"light_gray_stained_glass", Blocks.LIGHT_GRAY_STAINED_GLASS},
-            {"cyan_stained_glass",       Blocks.CYAN_STAINED_GLASS},
-            {"purple_stained_glass",     Blocks.PURPLE_STAINED_GLASS},
-            {"blue_stained_glass",       Blocks.BLUE_STAINED_GLASS},
-            {"brown_stained_glass",      Blocks.BROWN_STAINED_GLASS},
-            {"green_stained_glass",      Blocks.GREEN_STAINED_GLASS},
-            {"red_stained_glass",        Blocks.RED_STAINED_GLASS},
-            {"black_stained_glass",      Blocks.BLACK_STAINED_GLASS},
-    };
+    /**
+     * Base blocks (id prefix -> vanilla block to copy properties from).
+     *
+     * MC 26.2 collapsed the per-color vanilla blocks into {@link ColorCollection}s
+     * (e.g. {@code Blocks.CONCRETE.pick(DyeColor.WHITE)} replaces the old
+     * {@code Blocks.WHITE_CONCRETE}), and copper became a
+     * {@link net.minecraft.world.level.block.WeatheringCopperCollection}, so the
+     * color families are now built programmatically in DyeColor order to match the
+     * generated asset names ({@code white_concrete}, ... {@code black_stained_glass}).
+     */
+    private static final List<Object[]> BASES = buildBases();
+
+    private static List<Object[]> buildBases() {
+        List<Object[]> bases = new ArrayList<>();
+        Object[][] singles = {
+                {"dirt",            Blocks.DIRT},
+                {"iron_block",      Blocks.IRON_BLOCK},
+                {"coal_block",      Blocks.COAL_BLOCK},
+                {"copper_block",    Blocks.COPPER_BLOCK.weathering().unaffected()},
+                {"gold_block",      Blocks.GOLD_BLOCK},
+                {"redstone_block",  Blocks.REDSTONE_BLOCK},
+                {"emerald_block",   Blocks.EMERALD_BLOCK},
+                {"lapis_block",     Blocks.LAPIS_BLOCK},
+                {"diamond_block",   Blocks.DIAMOND_BLOCK},
+                {"netherite_block", Blocks.NETHERITE_BLOCK},
+                {"raw_iron_block",   Blocks.RAW_IRON_BLOCK},
+                {"raw_copper_block", Blocks.RAW_COPPER_BLOCK},
+                {"raw_gold_block",   Blocks.RAW_GOLD_BLOCK},
+                {"quartz_block",    Blocks.QUARTZ_BLOCK},
+                {"amethyst_block",  Blocks.AMETHYST_BLOCK},
+        };
+        for (Object[] s : singles) {
+            bases.add(s);
+        }
+        // Concrete (issue #4) — 16 colors
+        for (DyeColor c : DyeColor.values()) {
+            bases.add(new Object[]{c.getName() + "_concrete", Blocks.CONCRETE.pick(c)});
+        }
+        // Terracotta (issue #4) — plain + 16 colors
+        bases.add(new Object[]{"terracotta", Blocks.TERRACOTTA});
+        for (DyeColor c : DyeColor.values()) {
+            bases.add(new Object[]{c.getName() + "_terracotta", Blocks.DYED_TERRACOTTA.pick(c)});
+        }
+        // Glass (issue #4) — plain + 16 stained
+        bases.add(new Object[]{"glass", Blocks.GLASS});
+        for (DyeColor c : DyeColor.values()) {
+            bases.add(new Object[]{c.getName() + "_stained_glass", Blocks.STAINED_GLASS.pick(c)});
+        }
+        return bases;
+    }
 
     public static void registerModBlocks() {
         Blocky13.LOGGER.info("Registering Mod Blocks for " + Blocky13.MOD_ID);
