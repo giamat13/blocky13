@@ -3,6 +3,7 @@ package com.blocky13;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -82,19 +83,33 @@ public class CombinedBlock extends BaseEntityBlock {
     @Override
     public void fallOn(Level level, BlockState state, BlockPos pos, Entity entity, double fallDistance) {
         Block top = faceBlock(level, pos, Direction.UP);
+        BlockState topState = top.defaultBlockState();
+        double fall = Math.sqrt(Math.max(fallDistance, 0.0));
         if (top == Blocks.SLIME_BLOCK && !entity.isSuppressingBounce()) {
-            entity.causeFallDamage(fallDistance, 0.0F, level.damageSources().fall()); // no fall damage
-            // Bounce back up; 0.4*sqrt(h) roughly conserves energy like a real slime block.
-            double speed = Math.min(0.4 * Math.sqrt(Math.max(fallDistance, 0.0)), 2.0);
-            Vec3 motion = entity.getDeltaMovement();
-            entity.setDeltaMovement(motion.x, speed, motion.z);
+            // No fall damage + bounce; 0.4*sqrt(h) roughly conserves energy like a real slime block.
+            entity.causeFallDamage(fallDistance, 0.0F, level.damageSources().fall());
+            bounce(entity, 0.4 * fall);
             return;
         }
-        if (top == Blocks.HONEY_BLOCK || top == Blocks.HAY_BLOCK) {
+        if (topState.is(BlockTags.BEDS) && !entity.isSuppressingBounce()) {
+            entity.causeFallDamage(fallDistance, 0.5F, level.damageSources().fall()); // weaker than slime
+            bounce(entity, 0.25 * fall);
+            return;
+        }
+        if (top == Blocks.HONEY_BLOCK || top == Blocks.HAY_BLOCK || topState.is(BlockTags.WOOL)) {
             entity.causeFallDamage(fallDistance, 0.2F, level.damageSources().fall()); // soft landing
             return;
         }
+        if (top == Blocks.POINTED_DRIPSTONE) {
+            entity.causeFallDamage(fallDistance, 2.0F, level.damageSources().fall()); // spikes hurt more
+            return;
+        }
         super.fallOn(level, state, pos, entity, fallDistance);
+    }
+
+    private static void bounce(Entity entity, double speed) {
+        Vec3 motion = entity.getDeltaMovement();
+        entity.setDeltaMovement(motion.x, Math.min(speed, 2.0), motion.z);
     }
 
     @Override
@@ -108,8 +123,9 @@ public class CombinedBlock extends BaseEntityBlock {
             if (entity instanceof LivingEntity) {
                 entity.hurt(level.damageSources().cactus(), 1.0F);
             }
-        } else if (top == Blocks.SLIME_BLOCK || top == Blocks.HONEY_BLOCK || top == Blocks.SOUL_SAND) {
-            // Sticky/slow walking, mirroring vanilla slime/honey/soul sand.
+        } else if (top == Blocks.SLIME_BLOCK || top == Blocks.HONEY_BLOCK
+                || top == Blocks.SOUL_SAND || top == Blocks.MUD) {
+            // Sticky/slow walking, mirroring vanilla slime/honey/soul sand/mud.
             double absY = Math.abs(entity.getDeltaMovement().y);
             if (absY < 0.1 && !entity.isSteppingCarefully()) {
                 double scale = 0.4 + absY * 0.2;
