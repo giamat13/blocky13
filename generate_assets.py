@@ -1416,6 +1416,74 @@ def create_torch_reference(path):
     img.save(path)
 
 
+def create_block_plate_icon(path):
+    """Item icon for the block plate (issue #12): a small stack of thin plates."""
+    from PIL import Image
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    px = img.load()
+
+    def plate(y0, base):
+        for x in range(2, 14):
+            for y in range(y0, y0 + 3):
+                v = base + 25 if y == y0 else (base - 30 if y == y0 + 2 else base)
+                px[x, y] = (v, v, v, 255)
+        for y in range(y0, y0 + 3):
+            px[2, y] = (60, 60, 60, 255)
+            px[13, y] = (60, 60, 60, 255)
+
+    plate(4, 150)
+    plate(8, 170)
+    plate(12, 140)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    img.save(path)
+
+
+def create_block_crafting_textures(tx_b):
+    """Distinct grass-topped-workbench textures for the Block Crafting station (issue #12)."""
+    from PIL import Image
+
+    def planks(px):
+        brown, brown2, gap = (106, 77, 46), (120, 88, 54), (74, 53, 31)
+        for y in range(16):
+            for x in range(16):
+                c = brown if (y // 4) % 2 == 0 else brown2
+                if y % 4 == 3 or x == 7:
+                    c = gap if y % 4 == 3 else c
+                if x == 7 and y % 4 != 3:
+                    c = gap
+                px[x, y] = (c[0], c[1], c[2], 255)
+
+    def grass(px, y0, y1):
+        a, b = (96, 160, 54), (110, 174, 68)
+        for y in range(y0, y1):
+            for x in range(16):
+                g = a if (x * 3 + y * 5) % 7 < 4 else b
+                px[x, y] = (g[0], g[1], g[2], 255)
+
+    side = Image.new("RGBA", (16, 16))
+    ps = side.load()
+    planks(ps)
+    grass(ps, 0, 3)
+    for x in range(16):
+        ps[x, 3] = (96, 67, 40, 255)
+    os.makedirs(tx_b, exist_ok=True)
+    side.save(os.path.join(tx_b, "block_crafting_side.png"))
+
+    top = Image.new("RGBA", (16, 16))
+    pt = top.load()
+    grass(pt, 0, 16)
+    for gy in range(3):
+        for gx in range(3):
+            x0, y0 = 2 + gx * 4, 2 + gy * 4
+            for x in range(x0, x0 + 3):
+                for y in range(y0, y0 + 3):
+                    pt[x, y] = (120, 88, 54, 255)
+            for x in range(x0 - 1, x0 + 3):
+                if 0 <= x < 16:
+                    pt[x, y0 - 1] = (74, 53, 31, 255)
+    top.save(os.path.join(tx_b, "block_crafting_top.png"))
+
+
 def create_lamp_reference(path):
     from PIL import Image
     img = Image.new("RGBA", (16, 16), (0, 0, 0, 255))
@@ -1599,6 +1667,8 @@ if __name__ == "__main__":
         generate_for_bricks(base_id, rgb)
 
     generate_brush_assets()
+    create_block_plate_icon(os.path.join(ASSETS, "textures/item/block_plate.png"))
+    create_block_crafting_textures(os.path.join(ASSETS, "textures/block"))
     generate_lang_entries()
     generate_vertical_slabs()
     generate_layers()

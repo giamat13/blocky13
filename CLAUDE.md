@@ -17,7 +17,13 @@ Blocky13 is a Fabric mod for Minecraft 26.2 that adds decorative/functional bloc
 
 It also adds 16 colored torches (standing + wall) and 16 colored lamps (issue #9), and a `DyeBrushItem` that lets players recolor wool, terracotta, glass, and concrete blocks in-world using dyes.
 
-Recently implemented issues: #7 (snow-style layer blocks for every base), #9 (colored torches & lamps), #18 (vertical slabs), #19 (mobs cling to a honey block from below). Issues #12 and #20 (blocks/slabs combining two different materials in one cell) are deferred — both need a block entity plus a custom 26.2 render-state renderer.
+Recently implemented issues: #7 (snow-style layer blocks for every base), #9 (colored torches & lamps), #12 (Block Crafting station + per-face "combined" blocks), #18 (vertical slabs), #19 (mobs cling to a honey block from below). Issue #20 (a double slab of two *different* slabs) is still deferred.
+
+**Issue #12 (`CombinedBlocks.java` + client `CombinedBlockStateModel.java`):**
+- `BlockCraftingBlock` (the "Block Crafting" station, crafted from grass block + crafting table; distinct grass-topped-workbench texture from `create_block_crafting_textures`): any non-sneak right-click opens a real GUI — `BlockCraftingMenu` (server, Stonecutter-style: input slot 0 → result slot 1 with 16 `BlockPlateItem` plates of the input block, stored in the `PLATE_BLOCK` data component) + client `BlockCraftingScreen` (reuses the vanilla `stonecutter.png` background; only `extractBackground` is custom). Registered via `MenuType` in `CombinedBlocks` and `MenuScreens.register` in `Blocky13Client`. The GUI/menu code was written against the decompiled 26.2 sources (`extractBackground(GuiGraphicsExtractor)`, `graphics.blit(RenderPipelines.GUI_TEXTURED, …)`, `addStandardInventorySlots`).
+- `BlockPlateItem.useOn()` applies a plate to a face: a plain full block becomes a `CombinedBlock` (its block becomes the mining-behaviour "main"), and each clicked face records the plate's block
+- `CombinedBlock` (a `BaseEntityBlock`, `RenderShape.MODEL`, no item) delegates hardness to the main block via `getDestroyProgress` and drops the main block + plates in `playerWillDestroy`; `CombinedBlockEntity` stores the main + 6 face blocks and exposes them as Fabric render data
+- Rendering uses FRAPI: `CombinedBlockStateModel extends WrapperBlockStateModel`, bound via `ModelLoadingPlugin.modifyBlockModelAfterBake`, emits one quad per face textured with that face block's particle sprite (`getBlockStateModelSet().getParticleMaterial`). Faces are cosmetic for now — the issue's functional slime/honey faces are deferred.
 
 ## Architecture
 

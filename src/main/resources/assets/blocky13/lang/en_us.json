@@ -2219,5 +2219,11 @@
   "item.blocky13.black_torch": "Black Torch",
   "block.blocky13.black_wall_torch": "Black Wall Torch",
   "block.blocky13.black_lamp": "Black Lamp",
-  "item.blocky13.black_lamp": "Black Lamp"
+  "item.blocky13.black_lamp": "Black Lamp",
+  "block.blocky13.block_crafting": "Block Crafting",
+  "item.blocky13.block_crafting": "Block Crafting",
+  "item.blocky13.block_plate": "Block Plate",
+  "item.blocky13.block_plate.of": "%s Plate",
+  "block.blocky13.combined_block": "Combined Block",
+  "container.blocky13.block_crafting": "Block Crafting"
 }

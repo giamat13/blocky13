@@ -22,6 +22,10 @@ Blocky13 expands the building possibilities in Minecraft by creating a comprehen
 
 Plus **16 colored torches** (standing & wall) and **16 colored lamps** (issue #9), and mobs **cling to honey blocks** from below instead of falling (issue #19).
 
+### Block Crafting & Combined Blocks (issue #12)
+
+Craft a **Block Crafting** station (grass block + crafting table) and right-click it with any block to turn it into 16 thin **block plates**. Right-click the faces of a full block with plates to build a **combined block** — each of its six faces can show a different block's texture, while the block you started from keeps its mining speed. (Face textures are cosmetic for now; functional slime/honey faces are planned.)
+
 ## Redstone-Powered Variants
 
 All blocks made from redstone block material have special powered variants that emit a constant redstone signal (strength 15), making them useful for redstone contraptions and automation. These blocks appear in both the Building Blocks and Redstone Blocks creative tabs.
