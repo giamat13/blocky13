@@ -7,10 +7,12 @@
     "blocky13:netherite_block_door",
     "blocky13:netherite_block_fence",
     "blocky13:netherite_block_fence_gate",
+    "blocky13:netherite_block_layer",
     "blocky13:netherite_block_pressure_plate",
     "blocky13:netherite_block_slab",
     "blocky13:netherite_block_stairs",
     "blocky13:netherite_block_trapdoor",
+    "blocky13:netherite_block_vertical_slab",
     "blocky13:netherite_block_wall"
   ]
 }

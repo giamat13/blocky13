@@ -1,0 +1,52 @@
+{
+  "variants": {
+    "double=false,facing=north,waterlogged=false": {
+      "model": "blocky13:block/cyan_stained_glass_vertical_slab_north"
+    },
+    "double=false,facing=north,waterlogged=true": {
+      "model": "blocky13:block/cyan_stained_glass_vertical_slab_north"
+    },
+    "double=false,facing=south,waterlogged=false": {
+      "model": "blocky13:block/cyan_stained_glass_vertical_slab_south"
+    },
+    "double=false,facing=south,waterlogged=true": {
+      "model": "blocky13:block/cyan_stained_glass_vertical_slab_south"
+    },
+    "double=false,facing=east,waterlogged=false": {
+      "model": "blocky13:block/cyan_stained_glass_vertical_slab_east"
+    },
+    "double=false,facing=east,waterlogged=true": {
+      "model": "blocky13:block/cyan_stained_glass_vertical_slab_east"
+    },
+    "double=false,facing=west,waterlogged=false": {
+      "model": "blocky13:block/cyan_stained_glass_vertical_slab_west"
+    },
+    "double=false,facing=west,waterlogged=true": {
+      "model": "blocky13:block/cyan_stained_glass_vertical_slab_west"
+    },
+    "double=true,facing=north,waterlogged=false": {
+      "model": "blocky13:block/cyan_stained_glass_vertical_slab_double"
+    },
+    "double=true,facing=north,waterlogged=true": {
+      "model": "blocky13:block/cyan_stained_glass_vertical_slab_double"
+    },
+    "double=true,facing=south,waterlogged=false": {
+      "model": "blocky13:block/cyan_stained_glass_vertical_slab_double"
+    },
+    "double=true,facing=south,waterlogged=true": {
+      "model": "blocky13:block/cyan_stained_glass_vertical_slab_double"
+    },
+    "double=true,facing=east,waterlogged=false": {
+      "model": "blocky13:block/cyan_stained_glass_vertical_slab_double"
+    },
+    "double=true,facing=east,waterlogged=true": {
+      "model": "blocky13:block/cyan_stained_glass_vertical_slab_double"
+    },
+    "double=true,facing=west,waterlogged=false": {
+      "model": "blocky13:block/cyan_stained_glass_vertical_slab_double"
+    },
+    "double=true,facing=west,waterlogged=true": {
+      "model": "blocky13:block/cyan_stained_glass_vertical_slab_double"
+    }
+  }
+}

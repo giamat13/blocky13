@@ -17,5 +17,6 @@ public class Blocky13 implements ModInitializer {
 	public void onInitialize() {
 		ModBlocks.registerModBlocks();
 		ModItems.register();
+		CombinedBlocks.register();
 	}
 }

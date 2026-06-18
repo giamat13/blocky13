@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:torch",
+    "minecraft:orange_dye"
+  ],
+  "result": {
+    "count": 1,
+    "id": "blocky13:orange_torch"
+  }
+}

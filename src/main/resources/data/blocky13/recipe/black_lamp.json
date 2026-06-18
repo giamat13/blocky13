@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    "minecraft:glowstone",
+    "minecraft:black_dye"
+  ],
+  "result": {
+    "count": 1,
+    "id": "blocky13:black_lamp"
+  }
+}

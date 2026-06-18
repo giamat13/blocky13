@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/snow_height4",
+  "textures": {
+    "particle": "blocky13:block/magenta_bricks",
+    "texture": "blocky13:block/magenta_bricks"
+  }
+}

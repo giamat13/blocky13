@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "blocky13:block/green_bricks",
+    "particle": "blocky13:block/green_bricks"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "blocky13:block/block_crafting_top",
+    "bottom": "blocky13:block/block_crafting_side",
+    "side": "blocky13:block/block_crafting_side",
+    "particle": "blocky13:block/block_crafting_top"
+  }
+}

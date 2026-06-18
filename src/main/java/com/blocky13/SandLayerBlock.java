@@ -1,19 +1,12 @@
 package com.blocky13;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.block.SnowLayerBlock;
-import net.minecraft.world.level.block.state.BlockState;
-
-public class SandLayerBlock extends SnowLayerBlock {
+/**
+ * The original standalone sand layer block. Kept as a named subclass for clarity;
+ * the non-melting layer behaviour now lives in {@link MaterialLayerBlock}.
+ */
+public class SandLayerBlock extends MaterialLayerBlock {
 
     public SandLayerBlock(Properties properties) {
         super(properties);
-    }
-
-    @Override
-    public void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        // Sand layers don't melt
     }
 }

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/snow_height10",
+  "textures": {
+    "particle": "minecraft:block/orange_terracotta",
+    "texture": "minecraft:block/orange_terracotta"
+  }
+}

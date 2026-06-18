@@ -985,7 +985,7 @@ def _discover_bases():
     """Return every registered variant base, discovered from existing slab models."""
     bs_dir = os.path.join(ASSETS, "blockstates")
     bases = [f[:-len("_slab.json")] for f in os.listdir(bs_dir)
-             if f.endswith("_slab.json")]
+             if f.endswith("_slab.json") and not f.endswith("_vertical_slab.json")]
     return sorted(bases)
 
 
@@ -1094,7 +1094,7 @@ def generate_walls_and_tags():
     needs_stone, needs_iron, needs_diamond = [], [], []
 
     # Variants that share the base's mining behaviour (everything we register).
-    minted_variants = VARIANTS + ["wall"]
+    minted_variants = VARIANTS + ["wall", "vertical_slab", "layer"]
 
     for base in bases:
         tex, render_type = _base_side_texture(base)
@@ -1169,10 +1169,492 @@ def generate_walls_and_tags():
     print(f"Generated walls + connection/mining tags for {len(bases)} bases.")
 
 
+# --------------------------------------------------------------------------- #
+# Vertical slabs (issue #18)                                                    #
+#                                                                               #
+# Like walls, vertical slabs cover *every* registered base, so the base list    #
+# and each base's texture/render-type are discovered from the existing          #
+# `<base>_slab` block model rather than hard-coded. Each facing has its own      #
+# model (no blockstate rotation) so the visible half always matches the         #
+# collision shape defined in VerticalSlabBlock.java.                            #
+# --------------------------------------------------------------------------- #
+
+# facing -> (from-corner, to-corner, face flush with the cell boundary -> cullface)
+_VSLAB_BOXES = {
+    "north": ([0, 0, 0], [16, 16, 8],  "north"),
+    "south": ([0, 0, 8], [16, 16, 16], "south"),
+    "west":  ([0, 0, 0], [8, 16, 16],  "west"),
+    "east":  ([8, 0, 0], [16, 16, 16], "east"),
+}
+
+
+def bs_vertical_slab(base):
+    variants = {}
+    for double in ["false", "true"]:
+        for facing in ["north", "south", "east", "west"]:
+            for wl in ["false", "true"]:
+                key = f"double={double},facing={facing},waterlogged={wl}"
+                if double == "true":
+                    variants[key] = {"model": f"blocky13:block/{base}_vertical_slab_double"}
+                else:
+                    variants[key] = {"model": f"blocky13:block/{base}_vertical_slab_{facing}"}
+    return {"variants": variants}
+
+
+def model_vertical_slab_dir(tex, frm, to, cull_face, render_type):
+    faces = {}
+    for face in ["down", "up", "north", "south", "east", "west"]:
+        f = {"texture": "#all"}
+        if face == cull_face:
+            f["cullface"] = face
+        faces[face] = f
+    model = {"parent": "minecraft:block/block",
+             "textures": {"all": tex, "particle": tex},
+             "elements": [{"from": frm, "to": to, "faces": faces}]}
+    if render_type:
+        model["render_type"] = render_type
+    return model
+
+
+def model_vertical_slab_double(tex, render_type):
+    model = {"parent": "minecraft:block/cube_all", "textures": {"all": tex}}
+    if render_type:
+        model["render_type"] = render_type
+    return model
+
+
+def recipe_vertical_slab(base, ing):
+    return {"type": "minecraft:crafting_shaped", "category": "building",
+            "key": {"#": ing},
+            "pattern": ["#", "#", "#"],
+            "result": {"count": 6, "id": f"blocky13:{base}_vertical_slab"}}
+
+
+def loot_vertical_slab(base):
+    bid = f"blocky13:{base}_vertical_slab"
+    return {"type": "minecraft:block", "pools": [{"rolls": 1.0, "bonus_rolls": 0.0,
+        "entries": [{"type": "minecraft:item", "name": bid,
+            "functions": [
+                {"function": "minecraft:set_count", "add": False, "count": 2.0,
+                 "conditions": [{"condition": "minecraft:block_state_property",
+                                 "block": bid,
+                                 "properties": {"double": "true"}}]},
+                {"function": "minecraft:explosion_decay"}
+            ]}]}]}
+
+
+def generate_vertical_slabs():
+    bs_dir  = os.path.join(ASSETS, "blockstates")
+    mb_dir  = os.path.join(ASSETS, "models/block")
+    mi_dir  = os.path.join(ASSETS, "models/item")
+    it_dir  = os.path.join(ASSETS, "items")
+    rec_dir = os.path.join(DATA,   "recipe")
+    lt_dir  = os.path.join(DATA,   "loot_table/blocks")
+    adv_dir = os.path.join(DATA,   "advancement/recipes/blocky13")
+
+    bases = _discover_bases()
+    lang_path = os.path.join(ASSETS, "lang/en_us.json")
+    with open(lang_path) as f:
+        lang = json.load(f)
+
+    for base in bases:
+        tex, render_type = _base_side_texture(base)
+        ing = _base_ingredient(base)
+
+        write_json(f"{bs_dir}/{base}_vertical_slab.json", bs_vertical_slab(base))
+        for facing, (frm, to, cull) in _VSLAB_BOXES.items():
+            write_json(f"{mb_dir}/{base}_vertical_slab_{facing}.json",
+                       model_vertical_slab_dir(tex, frm, to, cull, render_type))
+        write_json(f"{mb_dir}/{base}_vertical_slab_double.json",
+                   model_vertical_slab_double(tex, render_type))
+        # Item model shows the north-facing half-block (like stairs/trapdoor items).
+        write_json(f"{mi_dir}/{base}_vertical_slab.json",
+                   {"parent": f"blocky13:block/{base}_vertical_slab_north"})
+        write_json(f"{it_dir}/{base}_vertical_slab.json",
+                   {"model": {"type": "minecraft:model",
+                              "model": f"blocky13:item/{base}_vertical_slab"}})
+        write_json(f"{rec_dir}/{base}_vertical_slab.json", recipe_vertical_slab(base, ing))
+        write_json(f"{lt_dir}/{base}_vertical_slab.json", loot_vertical_slab(base))
+        write_json(f"{adv_dir}/{base}_vertical_slab.json", advancement(base, "vertical_slab", ing))
+
+        full_name = f"{title_name(base)} Vertical Slab"
+        for prefix in ("block", "item"):
+            key = f"{prefix}.blocky13.{base}_vertical_slab"
+            if key not in lang:
+                lang[key] = full_name
+
+    with open(lang_path, "w") as f:
+        json.dump(lang, f, indent=2, ensure_ascii=False)
+    print(f"Generated vertical slabs for {len(bases)} bases.")
+
+
+# --------------------------------------------------------------------------- #
+# Material layers (issue #7)                                                     #
+#                                                                               #
+# Snow-style stackable layers (1–8) for every registered base. Reuses the       #
+# vanilla `minecraft:block/snow_heightN` parents (like the original sand layer)  #
+# so the height geometry matches snow exactly; the top layer is a full cube.     #
+# --------------------------------------------------------------------------- #
+
+def bs_layer(base):
+    variants = {}
+    for layers in range(1, 9):
+        h = layers * 2
+        variants[f"layers={layers}"] = {"model": f"blocky13:block/{base}_layer_height{h}"}
+    return {"variants": variants}
+
+
+def model_layer_height(tex, h, render_type):
+    model = {"parent": f"minecraft:block/snow_height{h}",
+             "textures": {"particle": tex, "texture": tex}}
+    if render_type:
+        model["render_type"] = render_type
+    return model
+
+
+def model_layer_full(tex, render_type):
+    model = {"parent": "minecraft:block/cube_all", "textures": {"all": tex, "particle": tex}}
+    if render_type:
+        model["render_type"] = render_type
+    return model
+
+
+def recipe_layer(base, ing):
+    return {"type": "minecraft:crafting_shaped", "category": "building",
+            "key": {"#": ing},
+            "pattern": ["###"],
+            "result": {"count": 6, "id": f"blocky13:{base}_layer"}}
+
+
+def loot_layer(base):
+    bid = f"blocky13:{base}_layer"
+    functions = []
+    for n in range(1, 9):
+        functions.append({"function": "minecraft:set_count", "add": False, "count": float(n),
+                          "conditions": [{"condition": "minecraft:block_state_property",
+                                          "block": bid,
+                                          "properties": {"layers": str(n)}}]})
+    functions.append({"function": "minecraft:explosion_decay"})
+    return {"type": "minecraft:block", "pools": [{"rolls": 1.0, "bonus_rolls": 0.0,
+        "entries": [{"type": "minecraft:item", "name": bid, "functions": functions}]}]}
+
+
+def generate_layers():
+    bs_dir  = os.path.join(ASSETS, "blockstates")
+    mb_dir  = os.path.join(ASSETS, "models/block")
+    mi_dir  = os.path.join(ASSETS, "models/item")
+    it_dir  = os.path.join(ASSETS, "items")
+    rec_dir = os.path.join(DATA,   "recipe")
+    lt_dir  = os.path.join(DATA,   "loot_table/blocks")
+    adv_dir = os.path.join(DATA,   "advancement/recipes/blocky13")
+
+    bases = _discover_bases()
+    lang_path = os.path.join(ASSETS, "lang/en_us.json")
+    with open(lang_path) as f:
+        lang = json.load(f)
+
+    for base in bases:
+        tex, render_type = _base_side_texture(base)
+        ing = _base_ingredient(base)
+
+        write_json(f"{bs_dir}/{base}_layer.json", bs_layer(base))
+        for h in (2, 4, 6, 8, 10, 12, 14):
+            write_json(f"{mb_dir}/{base}_layer_height{h}.json",
+                       model_layer_height(tex, h, render_type))
+        write_json(f"{mb_dir}/{base}_layer_height16.json", model_layer_full(tex, render_type))
+        # Item model shows the thinnest layer (matches the original sand layer).
+        write_json(f"{mi_dir}/{base}_layer.json",
+                   {"parent": f"blocky13:block/{base}_layer_height2"})
+        write_json(f"{it_dir}/{base}_layer.json",
+                   {"model": {"type": "minecraft:model",
+                              "model": f"blocky13:item/{base}_layer"}})
+        write_json(f"{rec_dir}/{base}_layer.json", recipe_layer(base, ing))
+        write_json(f"{lt_dir}/{base}_layer.json", loot_layer(base))
+        write_json(f"{adv_dir}/{base}_layer.json", advancement(base, "layer", ing))
+
+        full_name = f"{title_name(base)} Layer"
+        for prefix in ("block", "item"):
+            key = f"{prefix}.blocky13.{base}_layer"
+            if key not in lang:
+                lang[key] = full_name
+
+    with open(lang_path, "w") as f:
+        json.dump(lang, f, indent=2, ensure_ascii=False)
+    print(f"Generated material layers for {len(bases)} bases.")
+
+
+# --------------------------------------------------------------------------- #
+# Colored torches & lamps (issue #9)                                            #
+#                                                                               #
+# 16 colored torches (standing + wall, sharing one item) and 16 colored lamps.  #
+# Torches reuse the vanilla template_torch / template_torch_wall models, so the  #
+# torch texture only needs content in the column the templates sample (x 7-8,    #
+# y 6-15, flame brightest at the top). Lamps are full glowing cubes.             #
+# --------------------------------------------------------------------------- #
+
+REF_TORCH = os.path.join(ASSETS, "textures/block/reference_torch.png")
+REF_LAMP  = os.path.join(ASSETS, "textures/block/reference_lamp.png")
+
+
+def create_torch_reference(path):
+    from PIL import Image
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    px = img.load()
+    # Only the column sampled by template_torch (x = 7,8 ; y = 6..15).
+    for y in range(6, 16):
+        if y <= 7:
+            v = 255   # flame core (the up-face shows uv [7,6,9,8])
+        elif y <= 9:
+            v = 235   # flame
+        elif y <= 11:
+            v = 200   # hot tip of the handle
+        else:
+            v = 130   # handle
+        for x in (7, 8):
+            px[x, y] = (v, v, v, 255)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    img.save(path)
+
+
+def create_block_plate_icon(path):
+    """Item icon for the block plate (issue #12): a small stack of thin plates."""
+    from PIL import Image
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    px = img.load()
+
+    def plate(y0, base):
+        for x in range(2, 14):
+            for y in range(y0, y0 + 3):
+                v = base + 25 if y == y0 else (base - 30 if y == y0 + 2 else base)
+                px[x, y] = (v, v, v, 255)
+        for y in range(y0, y0 + 3):
+            px[2, y] = (60, 60, 60, 255)
+            px[13, y] = (60, 60, 60, 255)
+
+    plate(4, 150)
+    plate(8, 170)
+    plate(12, 140)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    img.save(path)
+
+
+def create_block_crafting_textures(tx_b):
+    """Distinct grass-topped-workbench textures for the Block Crafting station (issue #12)."""
+    from PIL import Image
+
+    def planks(px):
+        brown, brown2, gap = (106, 77, 46), (120, 88, 54), (74, 53, 31)
+        for y in range(16):
+            for x in range(16):
+                c = brown if (y // 4) % 2 == 0 else brown2
+                if y % 4 == 3 or x == 7:
+                    c = gap if y % 4 == 3 else c
+                if x == 7 and y % 4 != 3:
+                    c = gap
+                px[x, y] = (c[0], c[1], c[2], 255)
+
+    def grass(px, y0, y1):
+        a, b = (96, 160, 54), (110, 174, 68)
+        for y in range(y0, y1):
+            for x in range(16):
+                g = a if (x * 3 + y * 5) % 7 < 4 else b
+                px[x, y] = (g[0], g[1], g[2], 255)
+
+    side = Image.new("RGBA", (16, 16))
+    ps = side.load()
+    planks(ps)
+    grass(ps, 0, 3)
+    for x in range(16):
+        ps[x, 3] = (96, 67, 40, 255)
+    os.makedirs(tx_b, exist_ok=True)
+    side.save(os.path.join(tx_b, "block_crafting_side.png"))
+
+    top = Image.new("RGBA", (16, 16))
+    pt = top.load()
+    grass(pt, 0, 16)
+    for gy in range(3):
+        for gx in range(3):
+            x0, y0 = 2 + gx * 4, 2 + gy * 4
+            for x in range(x0, x0 + 3):
+                for y in range(y0, y0 + 3):
+                    pt[x, y] = (120, 88, 54, 255)
+            for x in range(x0 - 1, x0 + 3):
+                if 0 <= x < 16:
+                    pt[x, y0 - 1] = (74, 53, 31, 255)
+    top.save(os.path.join(tx_b, "block_crafting_top.png"))
+
+
+def create_lamp_reference(path):
+    from PIL import Image
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 255))
+    px = img.load()
+    for y in range(16):
+        for x in range(16):
+            if x in (0, 15) or y in (0, 15):
+                v = 95    # dark frame
+            elif 3 <= x <= 12 and 3 <= y <= 12:
+                v = 215   # glow
+            else:
+                v = 150   # body
+            px[x, y] = (v, v, v, 255)
+    for y in range(6, 10):       # bright center cluster
+        for x in range(6, 10):
+            px[x, y] = (245, 245, 245, 255)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    img.save(path)
+
+
+def bs_torch(color):
+    return {"variants": {"": {"model": f"blocky13:block/{color}_torch"}}}
+
+
+def bs_wall_torch(color):
+    m = f"blocky13:block/{color}_wall_torch"
+    return {"variants": {
+        "facing=east":  {"model": m},
+        "facing=south": {"model": m, "y": 90},
+        "facing=west":  {"model": m, "y": 180},
+        "facing=north": {"model": m, "y": 270},
+    }}
+
+
+def bs_lamp(color):
+    return {"variants": {"": {"model": f"blocky13:block/{color}_lamp"}}}
+
+
+def advancement_recipe(recipe_id, mc_ing):
+    return {
+        "parent": "minecraft:recipes/root",
+        "criteria": {
+            "has_ingredient": {"trigger": "minecraft:inventory_changed",
+                               "conditions": {"items": [{"items": mc_ing}]}},
+            "has_the_recipe": {"trigger": "minecraft:recipe_unlocked",
+                               "conditions": {"recipe": recipe_id}},
+        },
+        "requirements": [["has_the_recipe", "has_ingredient"]],
+        "rewards": {"recipes": [recipe_id]},
+    }
+
+
+def loot_named(drop_item_id):
+    return {"type": "minecraft:block", "pools": [{"rolls": 1.0, "bonus_rolls": 0.0,
+        "entries": [{"type": "minecraft:item", "name": f"blocky13:{drop_item_id}",
+            "functions": [{"function": "minecraft:explosion_decay"}]}]}]}
+
+
+def generate_torches_and_lamps():
+    bs_dir  = os.path.join(ASSETS, "blockstates")
+    mb_dir  = os.path.join(ASSETS, "models/block")
+    mi_dir  = os.path.join(ASSETS, "models/item")
+    it_dir  = os.path.join(ASSETS, "items")
+    tx_b    = os.path.join(ASSETS, "textures/block")
+    rec_dir = os.path.join(DATA,   "recipe")
+    lt_dir  = os.path.join(DATA,   "loot_table/blocks")
+    adv_dir = os.path.join(DATA,   "advancement/recipes/blocky13")
+
+    create_torch_reference(REF_TORCH)
+    create_lamp_reference(REF_LAMP)
+
+    lang_path = os.path.join(ASSETS, "lang/en_us.json")
+    with open(lang_path) as f:
+        lang = json.load(f)
+
+    # 16 dye colors, in DyeColor order, reusing the brick palette.
+    colors = [(name[:-len("_bricks")], rgb) for name, rgb in BRICKS_MATERIALS]
+
+    for color, rgb in colors:
+        dye = f"minecraft:{color}_dye"
+
+        # textures
+        recolor_texture(REF_TORCH, rgb, f"{tx_b}/{color}_torch.png")
+        recolor_texture(REF_LAMP,  rgb, f"{tx_b}/{color}_lamp.png")
+
+        # blockstates
+        write_json(f"{bs_dir}/{color}_torch.json",      bs_torch(color))
+        write_json(f"{bs_dir}/{color}_wall_torch.json", bs_wall_torch(color))
+        write_json(f"{bs_dir}/{color}_lamp.json",       bs_lamp(color))
+
+        # block models
+        write_json(f"{mb_dir}/{color}_torch.json",
+                   {"parent": "minecraft:block/template_torch",
+                    "textures": {"torch": f"blocky13:block/{color}_torch"}})
+        write_json(f"{mb_dir}/{color}_wall_torch.json",
+                   {"parent": "minecraft:block/template_torch_wall",
+                    "textures": {"torch": f"blocky13:block/{color}_torch"}})
+        write_json(f"{mb_dir}/{color}_lamp.json",
+                   {"parent": "minecraft:block/cube_all",
+                    "textures": {"all": f"blocky13:block/{color}_lamp"}})
+
+        # item models
+        write_json(f"{mi_dir}/{color}_torch.json",
+                   {"parent": "minecraft:item/generated",
+                    "textures": {"layer0": f"blocky13:block/{color}_torch"}})
+        write_json(f"{mi_dir}/{color}_lamp.json", {"parent": f"blocky13:block/{color}_lamp"})
+
+        # item definitions
+        write_json(f"{it_dir}/{color}_torch.json",
+                   {"model": {"type": "minecraft:model", "model": f"blocky13:item/{color}_torch"}})
+        write_json(f"{it_dir}/{color}_lamp.json",
+                   {"model": {"type": "minecraft:model", "model": f"blocky13:item/{color}_lamp"}})
+
+        # recipes (dye an existing torch / glowstone)
+        write_json(f"{rec_dir}/{color}_torch.json",
+                   {"type": "minecraft:crafting_shapeless", "category": "misc",
+                    "ingredients": ["minecraft:torch", dye],
+                    "result": {"count": 1, "id": f"blocky13:{color}_torch"}})
+        write_json(f"{rec_dir}/{color}_lamp.json",
+                   {"type": "minecraft:crafting_shapeless", "category": "building",
+                    "ingredients": ["minecraft:glowstone", dye],
+                    "result": {"count": 1, "id": f"blocky13:{color}_lamp"}})
+
+        # loot (the wall torch drops the torch item)
+        write_json(f"{lt_dir}/{color}_torch.json",      loot_simple(f"{color}_torch"))
+        write_json(f"{lt_dir}/{color}_wall_torch.json", loot_named(f"{color}_torch"))
+        write_json(f"{lt_dir}/{color}_lamp.json",       loot_simple(f"{color}_lamp"))
+
+        # advancements
+        write_json(f"{adv_dir}/{color}_torch.json",
+                   advancement_recipe(f"blocky13:{color}_torch", "minecraft:torch"))
+        write_json(f"{adv_dir}/{color}_lamp.json",
+                   advancement_recipe(f"blocky13:{color}_lamp", "minecraft:glowstone"))
+
+        # lang
+        label = title_name(color)
+        for key, name in (
+            (f"block.blocky13.{color}_torch", f"{label} Torch"),
+            (f"item.blocky13.{color}_torch", f"{label} Torch"),
+            (f"block.blocky13.{color}_wall_torch", f"{label} Wall Torch"),
+            (f"block.blocky13.{color}_lamp", f"{label} Lamp"),
+            (f"item.blocky13.{color}_lamp", f"{label} Lamp"),
+        ):
+            if key not in lang:
+                lang[key] = name
+
+    with open(lang_path, "w") as f:
+        json.dump(lang, f, indent=2, ensure_ascii=False)
+    print(f"Generated colored torches and lamps for {len(colors)} colors.")
+
+
 if __name__ == "__main__":
     if "--walls-tags" in sys.argv:
         # No PIL needed: walls reuse existing base textures.
         generate_walls_and_tags()
+        sys.exit(0)
+
+    if "--torches-lamps" in sys.argv:
+        generate_torches_and_lamps()
+        sys.exit(0)
+
+    if "--vertical-slabs" in sys.argv:
+        # No PIL needed: vertical slabs reuse existing base textures.
+        generate_vertical_slabs()
+        generate_walls_and_tags()  # refresh mining tags to include vertical slabs
+        sys.exit(0)
+
+    if "--layers" in sys.argv:
+        # No PIL needed: layers reuse existing base textures.
+        generate_layers()
+        generate_walls_and_tags()  # refresh mining tags to include layers
         sys.exit(0)
 
     for base_id, mc_tex, rgb, is_transparent in MATERIALS:
@@ -1185,6 +1667,11 @@ if __name__ == "__main__":
         generate_for_bricks(base_id, rgb)
 
     generate_brush_assets()
+    create_block_plate_icon(os.path.join(ASSETS, "textures/item/block_plate.png"))
+    create_block_crafting_textures(os.path.join(ASSETS, "textures/block"))
     generate_lang_entries()
+    generate_vertical_slabs()
+    generate_layers()
+    generate_torches_and_lamps()
     generate_walls_and_tags()
     print(f"\nDone! Generated assets for {len(MATERIALS)} materials and {len(BRICKS_MATERIALS)} brick sets.")
