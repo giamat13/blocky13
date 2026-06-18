@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "blocky13:block/gray_wall_torch"
+    },
+    "facing=south": {
+      "model": "blocky13:block/gray_wall_torch",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "blocky13:block/gray_wall_torch",
+      "y": 180
+    },
+    "facing=north": {
+      "model": "blocky13:block/gray_wall_torch",
+      "y": 270
+    }
+  }
+}

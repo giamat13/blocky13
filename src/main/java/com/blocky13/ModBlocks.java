@@ -6,6 +6,7 @@ import java.util.List;
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -14,6 +15,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.StandingAndWallBlockItem;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -42,6 +44,8 @@ public class ModBlocks {
     private static final List<Block> BUILDING_ORDER = new ArrayList<>();
     /** Blocks made of redstone -> also shown in the Redstone Blocks tab. */
     private static final List<Block> REDSTONE_ORDER = new ArrayList<>();
+    /** Colored torches and lamps (issue #9) -> Functional Blocks tab. */
+    private static final List<Block> FUNCTIONAL_ORDER = new ArrayList<>();
 
     /** The base whose variants act as redstone power sources and appear in the Redstone tab. */
     private static final String REDSTONE_BASE = "redstone_block";
@@ -109,6 +113,7 @@ public class ModBlocks {
 
         registerSandLayer();
         registerColoredBricks();
+        registerTorchesAndLamps();
 
         // All blocks live in Building Blocks; redstone-material variants also appear in Redstone Blocks.
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS).register(output -> {
@@ -121,6 +126,42 @@ public class ModBlocks {
                 output.accept(block);
             }
         });
+        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(output -> {
+            for (Block block : FUNCTIONAL_ORDER) {
+                output.accept(block);
+            }
+        });
+    }
+
+    /** Issue #9: 16 colored torches (standing + wall, one item each) and 16 colored lamps. */
+    private static void registerTorchesAndLamps() {
+        for (DyeColor color : DyeColor.values()) {
+            String cn = color.getName();
+
+            // Torch: a standing block + a wall block sharing a single StandingAndWallBlockItem.
+            Identifier torchId = id(cn + "_torch");
+            Identifier wallTorchId = id(cn + "_wall_torch");
+            ColoredTorchBlock torch = new ColoredTorchBlock(ParticleTypes.FLAME,
+                    BlockBehaviour.Properties.ofFullCopy(Blocks.TORCH)
+                            .setId(ResourceKey.create(Registries.BLOCK, torchId)));
+            ColoredWallTorchBlock wallTorch = new ColoredWallTorchBlock(ParticleTypes.FLAME,
+                    BlockBehaviour.Properties.ofFullCopy(Blocks.WALL_TORCH)
+                            .setId(ResourceKey.create(Registries.BLOCK, wallTorchId)));
+            Registry.register(BuiltInRegistries.BLOCK, torchId, torch);
+            Registry.register(BuiltInRegistries.BLOCK, wallTorchId, wallTorch);
+            Registry.register(BuiltInRegistries.ITEM, torchId,
+                    new StandingAndWallBlockItem(torch, wallTorch, Direction.DOWN,
+                            new Item.Properties().setId(ResourceKey.create(Registries.ITEM, torchId))));
+            FUNCTIONAL_ORDER.add(torch);
+
+            // Lamp: a full block that always glows (copies glowstone, light level 15).
+            Identifier lampId = id(cn + "_lamp");
+            Block lamp = new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.GLOWSTONE)
+                    .setId(ResourceKey.create(Registries.BLOCK, lampId)));
+            registerBlockItem(cn + "_lamp", lamp);
+            Registry.register(BuiltInRegistries.BLOCK, lampId, lamp);
+            FUNCTIONAL_ORDER.add(lamp);
+        }
     }
 
     private static void registerColoredBricks() {
@@ -141,9 +182,11 @@ public class ModBlocks {
         DyeBrushItem.registerFamily(COLORED_BRICKS);
     }
 
-    /** Register the standard 10 variants for a base, copying properties from {@code copyFrom}. */
+    /** Register the standard variants for a base, copying properties from {@code copyFrom}. */
     private static void registerVariants(String base, Block copyFrom, boolean rs) {
         registerSlab(base + "_slab", copyFrom, rs);
+        registerVerticalSlab(base + "_vertical_slab", copyFrom, rs);
+        registerLayer(base + "_layer", copyFrom, rs);
         registerStairs(base + "_stairs", copyFrom, rs);
         registerFence(base + "_fence", copyFrom, rs);
         registerFenceGate(base + "_fence_gate", copyFrom, rs);
@@ -169,6 +212,16 @@ public class ModBlocks {
 
     private static void registerSlab(String name, Block copyFrom, boolean rs) {
         register(name, rs ? new PoweredSlab(props(name, copyFrom)) : new SlabBlock(props(name, copyFrom)), rs);
+    }
+
+    private static void registerVerticalSlab(String name, Block copyFrom, boolean rs) {
+        BlockBehaviour.Properties p = props(name, copyFrom).noOcclusion();
+        register(name, rs ? new PoweredVerticalSlab(p) : new VerticalSlabBlock(p), rs);
+    }
+
+    private static void registerLayer(String name, Block copyFrom, boolean rs) {
+        BlockBehaviour.Properties p = props(name, copyFrom).noOcclusion();
+        register(name, rs ? new PoweredMaterialLayer(p) : new MaterialLayerBlock(p), rs);
     }
 
     private static void registerStairs(String name, Block copyFrom, boolean rs) {
@@ -248,6 +301,18 @@ public class ModBlocks {
 
     private static class PoweredSlab extends SlabBlock {
         PoweredSlab(Properties p) { super(p); }
+        @Override protected boolean isSignalSource(BlockState s) { return true; }
+        @Override protected int getSignal(BlockState s, BlockGetter l, BlockPos pos, Direction d) { return 15; }
+    }
+
+    private static class PoweredVerticalSlab extends VerticalSlabBlock {
+        PoweredVerticalSlab(Properties p) { super(p); }
+        @Override protected boolean isSignalSource(BlockState s) { return true; }
+        @Override protected int getSignal(BlockState s, BlockGetter l, BlockPos pos, Direction d) { return 15; }
+    }
+
+    private static class PoweredMaterialLayer extends MaterialLayerBlock {
+        PoweredMaterialLayer(Properties p) { super(p); }
         @Override protected boolean isSignalSource(BlockState s) { return true; }
         @Override protected int getSignal(BlockState s, BlockGetter l, BlockPos pos, Direction d) { return 15; }
     }

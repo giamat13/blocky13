@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/snow_height4",
+  "textures": {
+    "particle": "minecraft:block/diamond_block",
+    "texture": "minecraft:block/diamond_block"
+  }
+}
