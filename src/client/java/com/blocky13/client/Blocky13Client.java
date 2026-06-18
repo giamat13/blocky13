@@ -16,12 +16,16 @@ public class Blocky13Client implements ClientModInitializer {
 		// Issue #12: the Block Crafting station's GUI screen.
 		MenuScreens.register(CombinedBlocks.BLOCK_CRAFTING_MENU, BlockCraftingScreen::new);
 
-		// Issue #12: wrap the combined block's baked model so each face is textured from
-		// the block entity's per-face plate data (see CombinedBlockStateModel).
+		// Issue #12/#20: wrap the combined block's/slab's baked model so each face (or half)
+		// is textured from the block entity's render data (see CombinedBlockStateModel and
+		// CombinedSlabStateModel).
 		ModelLoadingPlugin.register(ctx ->
 			ctx.modifyBlockModelAfterBake().register((model, context) -> {
 				if (context.state().is(CombinedBlocks.COMBINED_BLOCK)) {
 					return new CombinedBlockStateModel(model);
+				}
+				if (context.state().is(CombinedBlocks.COMBINED_SLAB)) {
+					return new CombinedSlabStateModel(model);
 				}
 				return model;
 			}));
