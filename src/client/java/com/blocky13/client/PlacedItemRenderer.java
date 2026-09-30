@@ -1,5 +1,6 @@
 package com.blocky13.client;
 
+import com.blocky13.ModBlocks;
 import com.blocky13.PlacedItemBlockEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
@@ -33,6 +34,8 @@ public class PlacedItemRenderer implements BlockEntityRenderer<PlacedItemBlockEn
     public static class State extends BlockEntityRenderState {
         final List<ItemStackRenderState> items = new ArrayList<>();
         final List<Integer> yaws = new ArrayList<>();
+        /** Per item: its 3D model (null = the flat item sprite). */
+        final List<ModBlocks.@Nullable FloorModel> models = new ArrayList<>();
     }
 
     private final ItemModelResolver itemModelResolver;
@@ -52,30 +55,47 @@ public class PlacedItemRenderer implements BlockEntityRenderer<PlacedItemBlockEn
         BlockEntityRenderer.super.extractRenderState(be, state, partialTicks, cameraPosition, breakProgress);
         state.items.clear();
         state.yaws.clear();
+        state.models.clear();
         int seed = (int) be.getBlockPos().asLong();
         for (int slot = 0; slot < be.count(); slot++) {
             ItemStackRenderState itemState = new ItemStackRenderState();
             ItemStack stack = be.getItems().get(slot);
-            itemModelResolver.updateForTopItem(itemState, stack, ItemDisplayContext.FIXED, be.getLevel(), null, seed + slot);
+            ModBlocks.FloorModel model = ModBlocks.floorModelFor(stack);
+            ItemStack toDraw = model != null ? new ItemStack(model.item()) : stack;
+            itemModelResolver.updateForTopItem(itemState, toDraw, ItemDisplayContext.FIXED, be.getLevel(), null, seed + slot);
             state.items.add(itemState);
             state.yaws.add(be.getYaw(slot));
+            state.models.add(model);
         }
     }
 
     @Override
     public void submit(State state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState camera) {
+        float y = 0.002F; // running height of the stack, in blocks
         for (int slot = 0; slot < state.items.size(); slot++) {
             ItemStackRenderState itemState = state.items.get(slot);
+            ModBlocks.FloorModel model = state.models.get(slot);
             if (itemState.isEmpty()) {
                 continue;
             }
             poseStack.pushPose();
-            poseStack.translate(0.5F, 0.002F + LAYER * (slot + 0.5F), 0.5F);
-            poseStack.mulPose(Axis.YP.rotationDegrees(-state.yaws.get(slot)));
-            poseStack.mulPose(Axis.XP.rotationDegrees(90.0F));
-            poseStack.scale(SCALE, SCALE, SCALE);
+            float thickness;
+            if (model != null) {
+                // 3D model authored in 0..16 space: FIXED centres it on the origin, so lift by half its scaled size.
+                thickness = model.pixels() * model.scale() / 16.0F;
+                poseStack.translate(0.5F, y + model.scale() * 0.5F, 0.5F);
+                poseStack.mulPose(Axis.YP.rotationDegrees(-state.yaws.get(slot)));
+                poseStack.scale(model.scale(), model.scale(), model.scale());
+            } else {
+                thickness = LAYER;
+                poseStack.translate(0.5F, y + LAYER * 0.5F, 0.5F);
+                poseStack.mulPose(Axis.YP.rotationDegrees(-state.yaws.get(slot)));
+                poseStack.mulPose(Axis.XP.rotationDegrees(90.0F));
+                poseStack.scale(SCALE, SCALE, SCALE);
+            }
             itemState.submit(poseStack, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
             poseStack.popPose();
+            y += thickness;
         }
     }
 }

@@ -8,6 +8,7 @@ import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.fabricmc.fabric.api.registry.FlammableBlockRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -17,6 +18,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.StandingAndWallBlockItem;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
@@ -58,6 +61,35 @@ public class ModBlocks {
     /** Flat items (discs, paper, maps, ...) lying on the floor (no item; see PlacedItemBlock). */
     public static PlacedItemBlock PLACED_ITEM;
     public static BlockEntityType<PlacedItemBlockEntity> PLACED_ITEM_ENTITY;
+
+    /**
+     * How a floor item is drawn: a hidden helper item whose 3D model replaces the flat sprite,
+     * the scale it is drawn at, and its thickness in model pixels (16 = one block).
+     */
+    public record FloorModel(Item item, float scale, float pixels) {}
+    /** Vanilla discs (music_disc_<name>) each get their own model; keep in sync with generate_assets.py FLOOR_DISCS. */
+    private static final String[] VANILLA_DISCS = {"13", "cat", "blocks", "bounce", "chirp", "creator",
+            "creator_music_box", "far", "lava_chicken", "mall", "mellohi", "stal", "strad", "ward", "11",
+            "wait", "otherside", "relic", "5", "pigstep", "precipice", "tears"};
+    private static final java.util.Map<String, FloorModel> DISC_MODELS = new java.util.HashMap<>();
+    private static FloorModel DISC_MODEL, SHEET_MODEL, ENCHANTED_BOOK_MODEL, WRITTEN_BOOK_MODEL, WRITABLE_BOOK_MODEL;
+
+    /** The 3D model for a floor item, or null to fall back to the flat item sprite (maps, sherds, ...). */
+    public static FloorModel floorModelFor(ItemStack stack) {
+        if (stack.has(DataComponents.JUKEBOX_PLAYABLE)) {
+            Identifier key = BuiltInRegistries.ITEM.getKey(stack.getItem());
+            if (key.getNamespace().equals("minecraft") && key.getPath().startsWith("music_disc_")) {
+                FloorModel own = DISC_MODELS.get(key.getPath().substring("music_disc_".length()));
+                if (own != null) return own;
+            }
+            return DISC_MODEL; // modded discs: generic vinyl
+        }
+        if (stack.is(Items.PAPER)) return SHEET_MODEL;
+        if (stack.is(Items.ENCHANTED_BOOK)) return ENCHANTED_BOOK_MODEL;
+        if (stack.is(Items.WRITTEN_BOOK)) return WRITTEN_BOOK_MODEL;
+        if (stack.is(Items.WRITABLE_BOOK)) return WRITABLE_BOOK_MODEL;
+        return null;
+    }
 
     /** The base whose variants act as redstone power sources and appear in the Redstone tab. */
     private static final String REDSTONE_BASE = "redstone_block";
@@ -206,6 +238,22 @@ public class ModBlocks {
         Registry.register(BuiltInRegistries.BLOCK, id, PLACED_ITEM);
         PLACED_ITEM_ENTITY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, id,
                 new BlockEntityType<>(PlacedItemBlockEntity::new, Set.of(PLACED_ITEM)));
+
+        DISC_MODEL = floorModel("floor_disc", 0.625F, 1);
+        for (String disc : VANILLA_DISCS) {
+            DISC_MODELS.put(disc, floorModel("floor_disc_" + disc, 0.625F, 1));
+        }
+        SHEET_MODEL = floorModel("floor_sheet", 0.625F, 1);
+        ENCHANTED_BOOK_MODEL = floorModel("floor_book_enchanted", 0.75F, 3);
+        WRITTEN_BOOK_MODEL = floorModel("floor_book_written", 0.75F, 3);
+        WRITABLE_BOOK_MODEL = floorModel("floor_book_writable", 0.75F, 3);
+    }
+
+    /** Registers a hidden (no creative tab, no recipe) item that only carries a 3D model. */
+    private static FloorModel floorModel(String name, float scale, float pixels) {
+        Item item = Registry.register(BuiltInRegistries.ITEM, id(name),
+                new Item(new Item.Properties().setId(ResourceKey.create(Registries.ITEM, id(name)))));
+        return new FloorModel(item, scale, pixels);
     }
 
     private static void registerColoredBricks() {

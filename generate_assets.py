@@ -1697,14 +1697,14 @@ def create_book_texture(path, rgb):
     img.save(path)
 
 
-def book_element(color, x0, z0, rot, y0, cull_down):
+def book_element(color, x0, z0, rot, y0, cull_down, h=2):
     tex = f"#{color}"
     cover = {"uv": [3, 2, 13, 14], "texture": tex}
     down = dict(cover)
     if cull_down:
         down["cullface"] = "down"
     element = {
-        "from": [x0, y0, z0], "to": [x0 + 10, y0 + 2, z0 + 12],
+        "from": [x0, y0, z0], "to": [x0 + 10, y0 + h, z0 + 12],
         "faces": {
             "up":    cover,
             "down":  down,
@@ -1765,7 +1765,98 @@ FLOOR_PLACEABLE_ITEMS = [
 ]
 
 
+# 3D models for the items on the floor. Each is a hidden helper item (registered in ModBlocks)
+# whose model PlacedItemRenderer draws instead of the flat item sprite. (name, cover rgb) for books.
+FLOOR_BOOKS = [
+    ("floor_book_enchanted", (110,  50, 150)),
+    ("floor_book_written",   (120,  80,  45)),
+    ("floor_book_writable",  ( 60,  40,  30)),
+]
+
+
+# Vanilla music discs and the label colour of each (roughly the colour of its item sprite).
+# Keep the names in sync with ModBlocks.VANILLA_DISCS. The unnamed generic disc is for modded discs.
+FLOOR_DISCS = {
+    "13": (226, 186, 60), "cat": (72, 170, 90), "blocks": (220, 110, 50), "bounce": (90, 200, 220),
+    "chirp": (196, 60, 60), "creator": (140, 90, 200), "creator_music_box": (215, 150, 200),
+    "far": (110, 200, 110), "lava_chicken": (230, 90, 30), "mall": (150, 110, 220),
+    "mellohi": (200, 90, 170), "stal": (60, 60, 70), "strad": (235, 235, 235),
+    "ward": (40, 130, 90), "11": (90, 90, 100), "wait": (70, 150, 210),
+    "otherside": (60, 190, 170), "relic": (150, 130, 90), "5": (110, 30, 50),
+    "pigstep": (210, 120, 130), "precipice": (100, 150, 190), "tears": (170, 200, 240),
+}
+GENERIC_DISC_LABEL = (196, 70, 60)
+
+
+def create_disc_texture(path, label=GENERIC_DISC_LABEL):
+    """Black vinyl seen from above: grooves, a coloured label and a centre hole."""
+    from PIL import Image
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    px = img.load()
+    for y in range(16):
+        for x in range(16):
+            d = ((x + 0.5 - 8) ** 2 + (y + 0.5 - 8) ** 2) ** 0.5
+            if d > 8.2:
+                px[x, y] = (30, 30, 34, 255)          # rim / edge pixels outside the round shape
+            elif d < 0.9:
+                px[x, y] = (18, 18, 20, 255)          # hole
+            elif d < 3.2:
+                px[x, y] = label + (255,) if d > 1.8 else tuple(min(255, int(c * 1.25) + 20) for c in label) + (255,)  # label
+            elif int(d) % 2 == 0:
+                px[x, y] = (34, 34, 40, 255)          # groove
+            else:
+                px[x, y] = (22, 22, 26, 255)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    img.save(path)
+
+
+def _flat_box(x0, z0, x1, z1, h, tex):
+    face = {"uv": [x0, z0, x1, z1], "texture": tex}
+    return {"from": [x0, 0, z0], "to": [x1, h, z1],
+            "faces": {"up": face, "down": face, "north": face, "south": face,
+                      "east": face, "west": face}}
+
+
+def model_floor_disc(name="floor_disc"):
+    tex = "#disc"
+    # Octagon-ish disc: a centre strip plus stepped side strips (no overlapping top faces).
+    boxes = [(4, 0, 12, 16), (2, 1, 4, 15), (12, 1, 14, 15), (0, 4, 2, 12), (14, 4, 16, 12)]
+    return {"textures": {"disc": f"blocky13:block/{name}", "particle": f"blocky13:block/{name}"},
+            "elements": [_flat_box(x0, z0, x1, z1, 1, tex) for x0, z0, x1, z1 in boxes]}
+
+
+def model_floor_sheet():
+    tex = "#sheet"
+    return {"textures": {"sheet": "minecraft:item/paper", "particle": "minecraft:item/paper"},
+            "elements": [_flat_box(0, 0, 16, 16, 1, tex)]}
+
+
+def model_floor_book(name):
+    return {"textures": {name: f"blocky13:block/{name}", "particle": f"blocky13:block/{name}"},
+            "elements": [book_element(name, 3, 2, 0, 0, False, h=3)]}
+
+
+def generate_floor_models():
+    tx_b = os.path.join(ASSETS, "textures/block")
+    mi_dir = os.path.join(ASSETS, "models/item")
+    it_dir = os.path.join(ASSETS, "items")
+    create_disc_texture(f"{tx_b}/floor_disc.png")
+    models = {"floor_disc": model_floor_disc(), "floor_sheet": model_floor_sheet()}
+    for disc, label in FLOOR_DISCS.items():
+        create_disc_texture(f"{tx_b}/floor_disc_{disc}.png", label)
+        models[f"floor_disc_{disc}"] = model_floor_disc(f"floor_disc_{disc}")
+    for name, rgb in FLOOR_BOOKS:
+        create_book_texture(f"{tx_b}/{name}.png", rgb)
+        models[name] = model_floor_book(name)
+    for name, model in models.items():
+        write_json(f"{mi_dir}/{name}.json", model)
+        write_json(f"{it_dir}/{name}.json",
+                   {"model": {"type": "minecraft:model", "model": f"blocky13:item/{name}"}})
+    print(f"Generated {len(models)} floor item models.")
+
+
 def generate_placed_item():
+    generate_floor_models()
     write_json(os.path.join(ASSETS, "models/block/placed_item.json"),
                {"textures": {"particle": "minecraft:block/white_wool"}})
     write_json(os.path.join(ASSETS, "blockstates/placed_item.json"),

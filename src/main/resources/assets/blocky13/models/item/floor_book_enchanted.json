@@ -1,0 +1,76 @@
+{
+  "textures": {
+    "floor_book_enchanted": "blocky13:block/floor_book_enchanted",
+    "particle": "blocky13:block/floor_book_enchanted"
+  },
+  "elements": [
+    {
+      "from": [
+        3,
+        0,
+        2
+      ],
+      "to": [
+        13,
+        3,
+        14
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            3,
+            2,
+            13,
+            14
+          ],
+          "texture": "#floor_book_enchanted"
+        },
+        "down": {
+          "uv": [
+            3,
+            2,
+            13,
+            14
+          ],
+          "texture": "#floor_book_enchanted"
+        },
+        "west": {
+          "uv": [
+            2,
+            0,
+            14,
+            2
+          ],
+          "texture": "#floor_book_enchanted"
+        },
+        "east": {
+          "uv": [
+            2,
+            14,
+            14,
+            16
+          ],
+          "texture": "#floor_book_enchanted"
+        },
+        "north": {
+          "uv": [
+            3,
+            14,
+            13,
+            16
+          ],
+          "texture": "#floor_book_enchanted"
+        },
+        "south": {
+          "uv": [
+            3,
+            14,
+            13,
+            16
+          ],
+          "texture": "#floor_book_enchanted"
+        }
+      }
+    }
+  ]
+}
