@@ -1752,6 +1752,36 @@ def loot_book_pile():
         "entries": [{"type": "minecraft:item", "name": "minecraft:book", "functions": functions}]}]}
 
 
+# Flat items laid on the floor (discs, paper, maps, ...): drawn by a block-entity renderer, so the
+# block model only supplies the break-particle sprite. Jukebox-playable items (every music disc)
+# are always placeable; this tag adds the rest.
+FLOOR_PLACEABLE_ITEMS = [
+    "minecraft:paper",
+    "minecraft:filled_map",
+    "minecraft:enchanted_book",
+    "minecraft:written_book",
+    "minecraft:writable_book",
+    "#minecraft:decorated_pot_sherds",
+]
+
+
+def generate_placed_item():
+    write_json(os.path.join(ASSETS, "models/block/placed_item.json"),
+               {"textures": {"particle": "minecraft:block/white_wool"}})
+    write_json(os.path.join(ASSETS, "blockstates/placed_item.json"),
+               {"variants": {f"items={n}": {"model": "blocky13:block/placed_item"} for n in range(1, 5)}})
+    write_json(os.path.join(DATA, "tags/item/floor_placeable.json"),
+               {"replace": False, "values": FLOOR_PLACEABLE_ITEMS})
+
+    lang_path = os.path.join(ASSETS, "lang/en_us.json")
+    with open(lang_path) as f:
+        lang = json.load(f)
+    lang.setdefault("block.blocky13.placed_item", "Placed Item")
+    with open(lang_path, "w") as f:
+        json.dump(lang, f, indent=2, ensure_ascii=False)
+    print("Generated placed item.")
+
+
 def generate_book_pile():
     tx_b = os.path.join(ASSETS, "textures/block")
     for color, rgb, *_ in BOOK_PILE_BOOKS:
@@ -1771,8 +1801,9 @@ def generate_book_pile():
 
 
 if __name__ == "__main__":
-    if "--book-pile" in sys.argv:
+    if "--floor-items" in sys.argv:
         generate_book_pile()
+        generate_placed_item()
         sys.exit(0)
 
     if "--walls-tags" in sys.argv:
@@ -1813,5 +1844,6 @@ if __name__ == "__main__":
     generate_layers()
     generate_torches_and_lamps()
     generate_book_pile()
+    generate_placed_item()
     generate_walls_and_tags()
     print(f"\nDone! Generated assets for {len(MATERIALS)} materials and {len(BRICKS_MATERIALS)} brick sets.")

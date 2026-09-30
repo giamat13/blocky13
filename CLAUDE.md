@@ -32,10 +32,12 @@ Recently implemented issues: #7 (snow-style layer blocks for every base), #9 (co
 - `CombinedSlabBlock` (`BaseEntityBlock`, `RenderShape.MODEL`, `noOcclusion`) delegates hardness to the **bottom** slab via `getDestroyProgress` and drops both slabs in `playerWillDestroy`; `CombinedSlabBlockEntity` stores the bottom+top `Block`s as Fabric render data.
 - `CombinedSlabStateModel extends WrapperBlockStateModel` (bound via `modifyBlockModelAfterBake`) emits a full cube: DOWN cap = bottom sprite, UP cap = top sprite, each side split into two half-height quads (lower = bottom, upper = top). `MutableQuadView.BAKE_LOCK_UV` derives each quad's UVs from world position (side UV-locker uses `1 - y`), so each half samples the matching half of the texture slab-style — no manual UVs needed. Sprites come from each slab's `getParticleMaterial`.
 
-**Book pile (`BookPileBlock` + `mixin/BookPlaceMixin`):**
-- Using a vanilla book on a block places `book_pile` (FACING + BOOKS 1-4); using another book on the pile adds one (candle-style `canBeReplaced`). No item: drops/pick-blocks plain books
-- `BookPlaceMixin` injects at HEAD of `Item#useOn` for `Items.BOOK` (a plain `Item`); `useOn` runs only after the clicked block's own interaction, so chiseled bookshelves / enchanting tables are unaffected
-- Models/textures/loot from `generate_assets.py --book-pile` (`BOOK_PILE_BOOKS`: one 16x16 texture per book color = spine rows 0-1, cover rows 2-13, page edges rows 14-15)
+**Floor items (`BookPileBlock`, `PlacedItemBlock` + `mixin/FloorPlaceMixin`, client `PlacedItemRenderer`):**
+- `FloorPlaceMixin` injects at HEAD of `Item#useOn`, which runs only after the clicked block's own interaction, so jukeboxes / chiseled bookshelves / enchanting tables are unaffected
+- Plain book -> `book_pile` (FACING + BOOKS 1-4, candle-style `canBeReplaced` stacking, block model per count). No item: drops/pick-blocks plain books
+- Flat items -> `placed_item` (ITEMS 1-4 for the shape; `PlacedItemBlockEntity` holds the stacks + per-item yaw and drops them in `preRemoveSideEffects`). Placeable = any `JUKEBOX_PLAYABLE` item or the `blocky13:floor_placeable` item tag; written/writable books need sneak (they have their own right-click). Using another one stacks it; empty-hand right-click takes the top item back
+- `PlacedItemRenderer` (BER, registered via `BlockEntityRenderers.register`) draws each item lying flat in `ItemDisplayContext.FIXED`, like vanilla's `CampfireRenderer`; the block itself is `RenderShape.INVISIBLE` (its model only provides the particle sprite)
+- Assets from `generate_assets.py --floor-items` (`BOOK_PILE_BOOKS`: one 16x16 texture per book color = spine rows 0-1, cover rows 2-13, page edges rows 14-15; `FLOOR_PLACEABLE_ITEMS` = the tag)
 
 ## Architecture
 
@@ -63,7 +65,7 @@ Recently implemented issues: #7 (snow-style layer blocks for every base), #9 (co
 - Run this script after adding new block variants; do not hand-edit the generated files
 - `write_json` writes no trailing newline (match this convention to avoid diff noise)
 - Targeted flags re-run one feature without recoloring every material texture:
-  `--vertical-slabs`, `--layers`, `--torches-lamps`, `--walls-tags`, `--book-pile`
+  `--vertical-slabs`, `--layers`, `--torches-lamps`, `--walls-tags`, `--floor-items`
 - Vertical slabs and layers are generated for *every* base discovered from `<base>_slab` blockstates (same pattern as walls), and added to the `minted_variants` mining tags
 - Glass (transparent) variants carry `render_type: minecraft:translucent` in their models; preserve it when regenerating
 

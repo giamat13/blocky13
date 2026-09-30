@@ -1,9 +1,11 @@
 package com.blocky13.client;
 
 import com.blocky13.CombinedBlocks;
+import com.blocky13.ModBlocks;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 
 public class Blocky13Client implements ClientModInitializer {
 	@Override
@@ -15,6 +17,9 @@ public class Blocky13Client implements ClientModInitializer {
 
 		// Issue #12: the Block Crafting station's GUI screen.
 		MenuScreens.register(CombinedBlocks.BLOCK_CRAFTING_MENU, BlockCraftingScreen::new);
+
+		// Flat items (discs, paper, maps, ...) lying on the floor.
+		BlockEntityRenderers.register(ModBlocks.PLACED_ITEM_ENTITY, PlacedItemRenderer::new);
 
 		// Issue #12/#20: wrap the combined block's/slab's baked model so each face (or half)
 		// is textured from the block entity's render data (see CombinedBlockStateModel and

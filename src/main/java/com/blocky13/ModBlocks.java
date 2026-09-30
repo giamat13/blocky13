@@ -2,6 +2,7 @@ package com.blocky13;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.fabricmc.fabric.api.registry.FlammableBlockRegistry;
@@ -32,6 +33,7 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.WallBlock;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.item.DyeColor;
@@ -53,6 +55,9 @@ public class ModBlocks {
 
     /** A pile of 1-4 books lying on the floor (no item; placed by using a book on a block). */
     public static BookPileBlock BOOK_PILE;
+    /** Flat items (discs, paper, maps, ...) lying on the floor (no item; see PlacedItemBlock). */
+    public static PlacedItemBlock PLACED_ITEM;
+    public static BlockEntityType<PlacedItemBlockEntity> PLACED_ITEM_ENTITY;
 
     /** The base whose variants act as redstone power sources and appear in the Redstone tab. */
     private static final String REDSTONE_BASE = "redstone_block";
@@ -122,6 +127,7 @@ public class ModBlocks {
         registerColoredBricks();
         registerTorchesAndLamps();
         registerBookPile();
+        registerPlacedItem();
 
         // All blocks live in Building Blocks; redstone-material variants also appear in Redstone Blocks.
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS).register(output -> {
@@ -185,6 +191,21 @@ public class ModBlocks {
                 .setId(ResourceKey.create(Registries.BLOCK, id)));
         Registry.register(BuiltInRegistries.BLOCK, id, BOOK_PILE);
         FlammableBlockRegistry.getDefaultInstance().add(BOOK_PILE, 30, 60);
+    }
+
+    /** Flat items laid on the floor. No item: the mixin on {@code Item#useOn} places it. */
+    private static void registerPlacedItem() {
+        Identifier id = id("placed_item");
+        PLACED_ITEM = new PlacedItemBlock(BlockBehaviour.Properties.of()
+                .instabreak()
+                .noCollision()
+                .noOcclusion()
+                .sound(SoundType.WOOL)
+                .pushReaction(PushReaction.DESTROY)
+                .setId(ResourceKey.create(Registries.BLOCK, id)));
+        Registry.register(BuiltInRegistries.BLOCK, id, PLACED_ITEM);
+        PLACED_ITEM_ENTITY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, id,
+                new BlockEntityType<>(PlacedItemBlockEntity::new, Set.of(PLACED_ITEM)));
     }
 
     private static void registerColoredBricks() {

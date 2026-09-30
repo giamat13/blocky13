@@ -28,7 +28,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
  * A small pile of 1–4 books lying on the floor. Created in-world by using a vanilla book on a
- * block (see {@code BookPlaceMixin}); using another book on the pile adds one more, like
+ * block (see {@code FloorPlaceMixin}); using another book on the pile adds one more, like
  * candles. Has no item of its own — it drops (and pick-blocks as) plain books.
  */
 public class BookPileBlock extends HorizontalDirectionalBlock {

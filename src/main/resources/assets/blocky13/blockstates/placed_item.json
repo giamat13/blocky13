@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "items=1": {
+      "model": "blocky13:block/placed_item"
+    },
+    "items=2": {
+      "model": "blocky13:block/placed_item"
+    },
+    "items=3": {
+      "model": "blocky13:block/placed_item"
+    },
+    "items=4": {
+      "model": "blocky13:block/placed_item"
+    }
+  }
+}

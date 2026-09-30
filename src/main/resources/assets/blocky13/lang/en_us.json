@@ -2227,5 +2227,6 @@
   "block.blocky13.combined_block": "Combined Block",
   "block.blocky13.combined_slab": "Combined Slab",
   "container.blocky13.block_crafting": "Block Crafting",
-  "block.blocky13.book_pile": "Book Pile"
+  "block.blocky13.book_pile": "Book Pile",
+  "block.blocky13.placed_item": "Placed Item"
 }

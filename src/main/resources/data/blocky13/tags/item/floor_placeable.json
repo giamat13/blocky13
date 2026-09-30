@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:paper",
+    "minecraft:filled_map",
+    "minecraft:enchanted_book",
+    "minecraft:written_book",
+    "minecraft:writable_book",
+    "#minecraft:decorated_pot_sherds"
+  ]
+}

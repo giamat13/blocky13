@@ -5,7 +5,7 @@
 	"mixins": [
 		"ExampleMixin",
 		"HoneyClingMixin",
-		"BookPlaceMixin"
+		"FloorPlaceMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
