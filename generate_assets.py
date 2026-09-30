@@ -1635,7 +1635,146 @@ def generate_torches_and_lamps():
     print(f"Generated colored torches and lamps for {len(colors)} colors.")
 
 
+# --------------------------------------------------------------------------- #
+# Book pile                                                                    #
+#                                                                               #
+# 1-4 books lying on the floor (placed by using a vanilla book on a block).     #
+# Each book is a 10x2x12 box; each color has one 16x16 texture laid out as:     #
+#   rows 0-1  spine strip   (uv x 2..14)                                        #
+#   rows 2-13 front cover   (uv x 3..13)                                        #
+#   rows 14-15 page edges   (uv x 2..14)                                        #
+# --------------------------------------------------------------------------- #
+
+# (color name, cover rgb, x0, z0, y rotation) — bottom book first.
+BOOK_PILE_BOOKS = [
+    ("red",   (150,  38,  36), 3.0, 2.0,   0.0),
+    ("blue",  ( 44,  66, 140), 3.0, 2.0,  22.5),
+    ("green", ( 52, 110,  48), 4.0, 2.0,   0.0),
+    ("brown", (110,  72,  40), 2.5, 2.5, -22.5),
+]
+
+
+def create_book_texture(path, rgb):
+    from PIL import Image
+
+    def shade(c, f):
+        return tuple(max(0, min(255, int(v * f))) for v in c) + (255,)
+
+    img = Image.new("RGBA", (16, 16))
+    px = img.load()
+    gold = (222, 177, 45, 255)
+    for y in range(16):
+        for x in range(16):
+            # deterministic speckle so the leather isn't flat
+            px[x, y] = shade(rgb, 1.0 + (((x * 7 + y * 13) % 5) - 2) * 0.03)
+
+    # spine: darker lower row, two gold bands
+    for x in range(16):
+        px[x, 1] = shade(rgb, 0.8)
+    for x in (4, 11):
+        px[x, 0] = gold
+        px[x, 1] = shade(gold[:3], 0.8)
+
+    # cover: dark border around the 10x12 face, parchment title label
+    for x in range(3, 13):
+        px[x, 2] = shade(rgb, 0.65)
+        px[x, 13] = shade(rgb, 0.65)
+    for y in range(2, 14):
+        px[3, y] = shade(rgb, 0.65)
+        px[12, y] = shade(rgb, 0.65)
+    for y in range(4, 7):
+        for x in range(5, 11):
+            px[x, y] = (218, 204, 164, 255)
+    for x in range(6, 10):
+        px[x, 5] = (90, 70, 50, 255)
+
+    # page edges
+    for x in range(16):
+        px[x, 14] = (238, 232, 212, 255) if x % 3 else (224, 216, 192, 255)
+        px[x, 15] = (212, 203, 178, 255)
+
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    img.save(path)
+
+
+def book_element(color, x0, z0, rot, y0, cull_down):
+    tex = f"#{color}"
+    cover = {"uv": [3, 2, 13, 14], "texture": tex}
+    down = dict(cover)
+    if cull_down:
+        down["cullface"] = "down"
+    element = {
+        "from": [x0, y0, z0], "to": [x0 + 10, y0 + 2, z0 + 12],
+        "faces": {
+            "up":    cover,
+            "down":  down,
+            "west":  {"uv": [2, 0, 14, 2],   "texture": tex},   # spine
+            "east":  {"uv": [2, 14, 14, 16], "texture": tex},   # pages
+            "north": {"uv": [3, 14, 13, 16], "texture": tex},
+            "south": {"uv": [3, 14, 13, 16], "texture": tex},
+        },
+    }
+    if rot:
+        element["rotation"] = {"angle": rot, "axis": "y", "origin": [8, y0 + 1, 8]}
+    return element
+
+
+def model_book_pile(count):
+    textures = {"particle": f"blocky13:block/book_{BOOK_PILE_BOOKS[0][0]}"}
+    elements = []
+    for i, (color, _rgb, x0, z0, rot) in enumerate(BOOK_PILE_BOOKS[:count]):
+        textures[color] = f"blocky13:block/book_{color}"
+        elements.append(book_element(color, x0, z0, rot, i * 2, cull_down=(i == 0)))
+    return {"parent": "minecraft:block/block", "textures": textures, "elements": elements}
+
+
+def bs_book_pile():
+    rotations = {"north": 0, "east": 90, "south": 180, "west": 270}
+    variants = {}
+    for facing, y in rotations.items():
+        for n in range(1, len(BOOK_PILE_BOOKS) + 1):
+            v = {"model": f"blocky13:block/book_pile_{n}"}
+            if y:
+                v["y"] = y
+            variants[f"books={n},facing={facing}"] = v
+    return {"variants": variants}
+
+
+def loot_book_pile():
+    functions = []
+    for n in range(1, len(BOOK_PILE_BOOKS) + 1):
+        functions.append({"function": "minecraft:set_count", "add": False, "count": float(n),
+                          "conditions": [{"condition": "minecraft:block_state_property",
+                                          "block": "blocky13:book_pile",
+                                          "properties": {"books": str(n)}}]})
+    functions.append({"function": "minecraft:explosion_decay"})
+    return {"type": "minecraft:block", "pools": [{"rolls": 1.0, "bonus_rolls": 0.0,
+        "entries": [{"type": "minecraft:item", "name": "minecraft:book", "functions": functions}]}]}
+
+
+def generate_book_pile():
+    tx_b = os.path.join(ASSETS, "textures/block")
+    for color, rgb, *_ in BOOK_PILE_BOOKS:
+        create_book_texture(f"{tx_b}/book_{color}.png", rgb)
+    for n in range(1, len(BOOK_PILE_BOOKS) + 1):
+        write_json(os.path.join(ASSETS, f"models/block/book_pile_{n}.json"), model_book_pile(n))
+    write_json(os.path.join(ASSETS, "blockstates/book_pile.json"), bs_book_pile())
+    write_json(os.path.join(DATA, "loot_table/blocks/book_pile.json"), loot_book_pile())
+
+    lang_path = os.path.join(ASSETS, "lang/en_us.json")
+    with open(lang_path) as f:
+        lang = json.load(f)
+    lang.setdefault("block.blocky13.book_pile", "Book Pile")
+    with open(lang_path, "w") as f:
+        json.dump(lang, f, indent=2, ensure_ascii=False)
+    print("Generated book pile.")
+
+
 if __name__ == "__main__":
+    if "--book-pile" in sys.argv:
+        generate_book_pile()
+        sys.exit(0)
+
     if "--walls-tags" in sys.argv:
         # No PIL needed: walls reuse existing base textures.
         generate_walls_and_tags()
@@ -1673,5 +1812,6 @@ if __name__ == "__main__":
     generate_vertical_slabs()
     generate_layers()
     generate_torches_and_lamps()
+    generate_book_pile()
     generate_walls_and_tags()
     print(f"\nDone! Generated assets for {len(MATERIALS)} materials and {len(BRICKS_MATERIALS)} brick sets.")

@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // F5: builds and launches the dev client via Gradle, then attaches the debugger.
+      "type": "java",
+      "name": "Minecraft Client",
+      "request": "attach",
+      "hostName": "localhost",
+      "port": 5005,
+      "preLaunchTask": "runClient (debug)"
+    }
+  ]
+}

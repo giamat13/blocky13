@@ -1,0 +1,47 @@
+{
+  "version": "2.0.0",
+  // Gradle runs on the JDK set in java.jdt.ls.java.home (local .vscode/settings.json).
+  // When that setting is empty, gradlew falls back to the java on PATH.
+  "options": {
+    "env": { "JAVA_HOME": "${config:java.jdt.ls.java.home}" }
+  },
+  "tasks": [
+    {
+      // Starts the dev client through Gradle and waits for the debugger (port 5005).
+      // Used as the preLaunchTask of the "Minecraft Client" launch config (F5).
+      "label": "runClient (debug)",
+      "type": "shell",
+      "command": "./gradlew",
+      "windows": { "command": ".\\gradlew.bat" },
+      "args": ["runClient", "--debug-jvm", "--console=plain"],
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "gradle",
+        "pattern": { "regexp": "^__never_matches__$" },
+        "background": {
+          "activesBegin": true,
+          "beginsPattern": "^> Task :",
+          "endsPattern": "Listening for transport dt_socket at address"
+        }
+      },
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "runClient",
+      "type": "shell",
+      "command": "./gradlew",
+      "windows": { "command": ".\\gradlew.bat" },
+      "args": ["runClient", "--console=plain"],
+      "problemMatcher": []
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "./gradlew",
+      "windows": { "command": ".\\gradlew.bat" },
+      "args": ["build", "--console=plain"],
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    }
+  ]
+}

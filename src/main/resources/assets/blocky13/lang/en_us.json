@@ -2226,5 +2226,6 @@
   "item.blocky13.block_plate.of": "%s Plate",
   "block.blocky13.combined_block": "Combined Block",
   "block.blocky13.combined_slab": "Combined Slab",
-  "container.blocky13.block_crafting": "Block Crafting"
+  "container.blocky13.block_crafting": "Block Crafting",
+  "block.blocky13.book_pile": "Book Pile"
 }

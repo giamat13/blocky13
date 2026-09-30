@@ -1,0 +1,78 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "blocky13:block/book_red",
+    "red": "blocky13:block/book_red"
+  },
+  "elements": [
+    {
+      "from": [
+        3.0,
+        0,
+        2.0
+      ],
+      "to": [
+        13.0,
+        2,
+        14.0
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            3,
+            2,
+            13,
+            14
+          ],
+          "texture": "#red"
+        },
+        "down": {
+          "uv": [
+            3,
+            2,
+            13,
+            14
+          ],
+          "texture": "#red",
+          "cullface": "down"
+        },
+        "west": {
+          "uv": [
+            2,
+            0,
+            14,
+            2
+          ],
+          "texture": "#red"
+        },
+        "east": {
+          "uv": [
+            2,
+            14,
+            14,
+            16
+          ],
+          "texture": "#red"
+        },
+        "north": {
+          "uv": [
+            3,
+            14,
+            13,
+            16
+          ],
+          "texture": "#red"
+        },
+        "south": {
+          "uv": [
+            3,
+            14,
+            13,
+            16
+          ],
+          "texture": "#red"
+        }
+      }
+    }
+  ]
+}

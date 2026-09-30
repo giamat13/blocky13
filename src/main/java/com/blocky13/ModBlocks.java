@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
+import net.fabricmc.fabric.api.registry.FlammableBlockRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -27,6 +28,7 @@ import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.PressurePlateBlock;
 import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.WallBlock;
@@ -35,6 +37,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.state.properties.BlockSetType;
 import net.minecraft.world.level.block.state.properties.WoodType;
+import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.material.PushReaction;
 
 public class ModBlocks {
 
@@ -46,6 +50,9 @@ public class ModBlocks {
     private static final List<Block> REDSTONE_ORDER = new ArrayList<>();
     /** Colored torches and lamps (issue #9) -> Functional Blocks tab. */
     private static final List<Block> FUNCTIONAL_ORDER = new ArrayList<>();
+
+    /** A pile of 1-4 books lying on the floor (no item; placed by using a book on a block). */
+    public static BookPileBlock BOOK_PILE;
 
     /** The base whose variants act as redstone power sources and appear in the Redstone tab. */
     private static final String REDSTONE_BASE = "redstone_block";
@@ -114,6 +121,7 @@ public class ModBlocks {
         registerSandLayer();
         registerColoredBricks();
         registerTorchesAndLamps();
+        registerBookPile();
 
         // All blocks live in Building Blocks; redstone-material variants also appear in Redstone Blocks.
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS).register(output -> {
@@ -162,6 +170,21 @@ public class ModBlocks {
             Registry.register(BuiltInRegistries.BLOCK, lampId, lamp);
             FUNCTIONAL_ORDER.add(lamp);
         }
+    }
+
+    /** Books placed on the floor. Has no item: the mixin on {@code Item#useOn} places it from a book. */
+    private static void registerBookPile() {
+        Identifier id = id("book_pile");
+        BOOK_PILE = new BookPileBlock(BlockBehaviour.Properties.of()
+                .mapColor(MapColor.WOOD)
+                .strength(0.2F)
+                .sound(SoundType.CHISELED_BOOKSHELF)
+                .noOcclusion()
+                .ignitedByLava()
+                .pushReaction(PushReaction.DESTROY)
+                .setId(ResourceKey.create(Registries.BLOCK, id)));
+        Registry.register(BuiltInRegistries.BLOCK, id, BOOK_PILE);
+        FlammableBlockRegistry.getDefaultInstance().add(BOOK_PILE, 30, 60);
     }
 
     private static void registerColoredBricks() {
